@@ -35,6 +35,7 @@ services:
       dockerfile: apps/bot/Dockerfile
     environment:
       BOT_TOKEN: ${BOT_TOKEN}
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
       WEB_URL: ${WEB_URL:-http://localhost:3000}
       API_URL: http://api:4000
       NODE_ENV: production

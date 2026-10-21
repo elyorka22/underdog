@@ -47,6 +47,9 @@ workers:
       - key: BOT_TOKEN
         scope: RUN_TIME
         type: SECRET
+      - key: ADMIN_CHAT_ID
+        scope: RUN_TIME
+        type: SECRET
       - key: WEB_URL
         scope: RUN_TIME
         value: ${web.PUBLIC_URL}

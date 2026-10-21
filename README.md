@@ -78,9 +78,11 @@ docker compose up -d --build api web
 ### 4. Бот (опционально)
 
 ```bash
-# добавьте BOT_TOKEN в .env
+# в .env: BOT_TOKEN=... и ADMIN_CHAT_ID=ваш_chat_id
 docker compose --profile bot up -d --build bot
 ```
+
+`ADMIN_CHAT_ID` — числовой ID вашего чата с ботом. Только этому чату видна кнопка «Админ» и команда `/admin` (статистика).
 
 ### Полезные команды
 
