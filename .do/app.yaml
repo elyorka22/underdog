@@ -1,0 +1,57 @@
+name: underdog
+region: fra
+
+services:
+  - name: api
+    dockerfile_path: apps/api/Dockerfile
+    source_dir: /
+    http_port: 4000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: API_PORT
+        value: "4000"
+      - key: CORS_ORIGIN
+        scope: RUN_TIME
+        value: ${web.PUBLIC_URL}
+      - key: NODE_ENV
+        value: production
+
+  - name: web
+    dockerfile_path: apps/web/Dockerfile
+    source_dir: /
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
+    envs:
+      - key: PORT
+        value: "3000"
+      - key: API_URL
+        scope: RUN_TIME
+        value: ${api.PRIVATE_URL}
+      - key: NEXT_PUBLIC_API_URL
+        scope: RUN_TIME
+        value: ${api.PUBLIC_URL}
+      - key: NODE_ENV
+        value: production
+
+workers:
+  - name: bot
+    dockerfile_path: apps/bot/Dockerfile
+    source_dir: /
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: BOT_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      - key: WEB_URL
+        scope: RUN_TIME
+        value: ${web.PUBLIC_URL}
+      - key: API_URL
+        scope: RUN_TIME
+        value: ${api.PRIVATE_URL}
+      - key: NODE_ENV
+        value: production

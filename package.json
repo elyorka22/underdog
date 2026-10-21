@@ -1,0 +1,21 @@
+{
+  "name": "underdog",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @underdog/api",
+    "dev:web": "npm run dev -w @underdog/web",
+    "dev:bot": "npm run dev -w @underdog/bot",
+    "build": "npm run build --workspaces --if-present",
+    "start:api": "npm run start -w @underdog/api",
+    "start:web": "npm run start -w @underdog/web",
+    "start:bot": "npm run start -w @underdog/bot"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
