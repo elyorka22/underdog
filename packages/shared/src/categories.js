@@ -4,42 +4,42 @@
 export const categories = [
   {
     id: "tech",
-    title: "Технологии",
-    description: "IT, разработка, гаджеты и стартапы",
+    title: "Dasturlash",
+    description: "Kod, kurslar, jamoalar",
   },
   {
     id: "crypto",
-    title: "Крипто и финансы",
-    description: "Рынки, трейдинг, инвестиции",
+    title: "Kripto va moliya",
+    description: "Bozor, treyding, investitsiya",
   },
   {
     id: "design",
-    title: "Дизайн",
-    description: "UI/UX, графический дизайн, вдохновение",
+    title: "Dizayn",
+    description: "UI/UX, grafika, ilhom",
   },
   {
     id: "marketing",
-    title: "Маркетинг",
-    description: "SMM, реклама, рост продуктов",
+    title: "Marketing",
+    description: "SMM, reklama, o'sish",
   },
   {
     id: "education",
-    title: "Обучение",
-    description: "Курсы, языки, навыки",
+    title: "Ta'lim",
+    description: "Til, imtihon, o'quv materiallari",
   },
   {
     id: "lifestyle",
-    title: "Лайфстайл",
-    description: "Путешествия, еда, здоровье",
+    title: "Hayot tarzi",
+    description: "Sayohat, ovqat, salomatlik",
   },
   {
     id: "news",
-    title: "Новости",
-    description: "Медиа и аналитика",
+    title: "Yangiliklar",
+    description: "Tezkor va tekshirilgan manbalar",
   },
   {
     id: "games",
-    title: "Игры",
-    description: "Геймдев, киберспорт, стримы",
+    title: "O'yinlar",
+    description: "Gamedev, esports, strimlar",
   },
 ];

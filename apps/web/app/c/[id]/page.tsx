@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: CommunityPageProps) {
       description: item.description,
     };
   } catch {
-    return { title: "Не найдено" };
+    return { title: "Topilmadi" };
   }
 }
 
@@ -29,49 +29,43 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
   }
 
   return (
-    <section className="detail">
-      <div className="shell">
-        <div className="detail__panel">
-          <p>
-            <span className="pill">
-              {item.type === "channel" ? "канал" : "группа"}
-            </span>{" "}
-            <span className="pill pill-muted">{item.categoryTitle}</span>
-          </p>
-          <h1 className="detail__title">{item.title}</h1>
-          <p className="community-row__meta">
-            @{item.username} · {formatMembers(item.membersCount)} участников
-            {item.verified ? " · проверен" : ""}
-          </p>
-          <p className="community-row__desc" style={{ fontSize: "1.05rem" }}>
-            {item.description}
-          </p>
-          <div className="tag-row">
-            {item.tags.map((tag) => (
-              <span key={tag} className="tag">
-                #{tag}
-              </span>
-            ))}
-          </div>
-          <div className="detail__actions">
-            <a
-              className="btn btn-primary"
-              href={item.telegramUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Открыть в Telegram
-            </a>
-            <Link
-              className="btn btn-ghost"
-              href={`/search?category=${item.categoryId}`}
-            >
-              Похожие в категории
-            </Link>
-            <Link className="btn btn-ghost" href="/search">
-              Назад к поиску
-            </Link>
-          </div>
+    <section className="shell ud-page">
+      <div className="ud-detail">
+        <p style={{ margin: 0 }}>
+          <span className="ud-badge">
+            {item.type === "channel" ? "Kanal" : "Guruh"}
+          </span>{" "}
+          <span className="ud-badge">{item.categoryTitle}</span>
+        </p>
+        <h1>{item.title}</h1>
+        <p style={{ margin: 0, fontWeight: 700 }}>
+          @{item.username} · {formatMembers(item.membersCount)} obunachi
+          {item.verified ? " · tekshirilgan" : ""}
+        </p>
+        <p style={{ margin: 0, fontSize: 18, lineHeight: 1.5, color: "var(--muted)" }}>
+          {item.description}
+        </p>
+        <p style={{ margin: 0, fontWeight: 500 }}>
+          {item.tags.map((tag) => `#${tag}`).join(" ")}
+        </p>
+        <div className="ud-detail__actions">
+          <a
+            className="press ud-btn ud-btn--pink shadow-sm"
+            href={item.telegramUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Telegramda ochish
+          </a>
+          <Link
+            className="press ud-btn ud-btn--white shadow-sm"
+            href={`/search?category=${item.categoryId}`}
+          >
+            Shu kategoriyada
+          </Link>
+          <Link className="press ud-btn ud-btn--yellow shadow-sm" href="/search">
+            Qidiruvga qaytish
+          </Link>
         </div>
       </div>
     </section>

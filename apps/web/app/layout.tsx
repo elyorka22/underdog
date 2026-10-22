@@ -1,28 +1,34 @@
 import type { Metadata } from "next";
-import { Manrope, Syne } from "next/font/google";
+import { Anton, Bowlby_One, Space_Grotesk } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
-const syne = Syne({
+const bowlby = Bowlby_One({
   subsets: ["latin"],
-  variable: "--font-syne",
-  weight: ["600", "700", "800"],
+  weight: "400",
+  variable: "--font-bowlby",
 });
 
-const manrope = Manrope({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+});
+
+const space = Space_Grotesk({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "700"],
+  variable: "--font-space",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Underdog — поиск Telegram каналов и групп",
-    template: "%s · Underdog",
+    default: "UnderDog — Telegram qidiruv",
+    template: "%s · UnderDog",
   },
   description:
-    "Находите Telegram-каналы и группы по теме, типу и ключевым словам.",
+    "Telegram kanal, guruh va mavzularni bitta qidiruvda toping. Hidla. Top. O't.",
 };
 
 export default function RootLayout({
@@ -31,17 +37,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
-      <body className={`${syne.variable} ${manrope.variable}`}>
+    <html lang="uz">
+      <body className={`${bowlby.variable} ${anton.variable} ${space.variable}`}>
         <style>{`
           :root {
-            --font-display: var(--font-syne), "Avenir Next", sans-serif;
-            --font-body: var(--font-manrope), "Segoe UI", sans-serif;
+            --font-display: var(--font-bowlby), system-ui, sans-serif;
+            --font-stamp: var(--font-anton), system-ui, sans-serif;
+            --font-body: var(--font-space), system-ui, sans-serif;
           }
         `}</style>
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <div id="top">
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+        </div>
       </body>
     </html>
   );

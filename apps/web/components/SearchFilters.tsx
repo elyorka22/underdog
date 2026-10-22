@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/lib/api";
 
 type SearchFiltersProps = {
@@ -38,28 +38,28 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
   }
 
   return (
-    <form className="filters" onSubmit={apply}>
+    <form className="ud-filters" onSubmit={apply}>
       <input
         value={q}
         onChange={(event) => setQ(event.target.value)}
-        placeholder="Запрос"
-        aria-label="Запрос"
+        placeholder="So'rov"
+        aria-label="So'rov"
       />
       <select
         value={type}
         onChange={(event) => setType(event.target.value)}
-        aria-label="Тип"
+        aria-label="Tur"
       >
-        <option value="all">Все типы</option>
-        <option value="channel">Каналы</option>
-        <option value="group">Группы</option>
+        <option value="all">Barcha turlar</option>
+        <option value="channel">Kanallar</option>
+        <option value="group">Guruhlar</option>
       </select>
       <select
         value={category}
         onChange={(event) => setCategory(event.target.value)}
-        aria-label="Категория"
+        aria-label="Kategoriya"
       >
-        <option value="all">Все категории</option>
+        <option value="all">Barcha kategoriyalar</option>
         {categories.map((item) => (
           <option key={item.id} value={item.id}>
             {item.title}
@@ -69,14 +69,14 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
       <select
         value={sort}
         onChange={(event) => setSort(event.target.value)}
-        aria-label="Сортировка"
+        aria-label="Saralash"
       >
-        <option value="members">По размеру</option>
-        <option value="title">По названию</option>
-        <option value="newest">Новые в каталоге</option>
+        <option value="members">Obunachilar bo'yicha</option>
+        <option value="title">Nom bo'yicha</option>
+        <option value="newest">Yangi</option>
       </select>
-      <button className="btn btn-primary" type="submit">
-        Применить
+      <button className="press" type="submit">
+        Qo&apos;llash
       </button>
     </form>
   );

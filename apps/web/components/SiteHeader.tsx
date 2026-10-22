@@ -1,40 +1,24 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const links = [
-  { href: "/", label: "Главная" },
-  { href: "/search", label: "Поиск" },
-  { href: "/categories", label: "Категории" },
-  { href: "/about", label: "О сервисе" },
-];
+import { BOT_URL } from "@/lib/brand";
+import { DogMark } from "./DogMark";
 
 export function SiteHeader() {
-  const pathname = usePathname();
-
   return (
-    <header className="site-header">
-      <div className="shell site-header__inner">
-        <Link href="/" className="brand" aria-label="Underdog home">
-          Under<span>dog</span>
+    <header className="ud-header">
+      <div className="shell ud-header__inner">
+        <Link href="/" className="ud-brand" aria-label="UnderDog home">
+          <span className="ud-brand__mark">
+            <DogMark />
+          </span>
+          <span className="ud-brand__name">UnderDog</span>
         </Link>
-        <nav className="nav" aria-label="Основная навигация">
-          {links.map((link) => {
-            const current =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={current ? "page" : undefined}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <nav className="ud-nav" aria-label="Asosiy navigatsiya">
+          <Link href="/categories">Kategoriyalar</Link>
+          <Link href="/search">Natijalar</Link>
+          <Link href="/#qanday">Qanday ishlaydi</Link>
+          <a className="press ud-nav__cta" href={BOT_URL} target="_blank" rel="noreferrer">
+            Telegramda ochish
+          </a>
         </nav>
       </div>
     </header>

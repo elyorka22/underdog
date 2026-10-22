@@ -12,6 +12,10 @@ type SearchPageProps = {
   }>;
 };
 
+export const metadata = {
+  title: "Natijalar",
+};
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const [result, categories] = await Promise.all([
@@ -26,26 +30,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   ]);
 
   return (
-    <section className="section">
-      <div className="shell">
-        <div className="section__head">
-          <div>
-            <h2>Поиск</h2>
-            <p>Фильтры по типу, категории и сортировке</p>
-          </div>
-        </div>
+    <section className="shell ud-page">
+      <div className="ud-stamp ud-stamp--yellow">QIDIRUV</div>
+      <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: "clamp(32px, 5vw, 56px)", lineHeight: 1.05 }}>
+        Natijalar
+      </h2>
+      <p style={{ margin: 0, color: "var(--muted)", fontSize: 18 }}>
+        Filtrlarni sozlang yoki yangi so&apos;rov yozing.
+      </p>
 
-        <Suspense fallback={<div className="filters">Загрузка фильтров…</div>}>
-          <SearchFilters categories={categories.items} />
-        </Suspense>
+      <Suspense fallback={<div className="ud-filters">Yuklanmoqda…</div>}>
+        <SearchFilters categories={categories.items} />
+      </Suspense>
 
-        <p className="result-meta">
-          Найдено: {result.total}
-          {params.q ? ` по запросу «${params.q}»` : ""}
-        </p>
+      <p style={{ margin: 0, fontWeight: 700 }}>
+        Topildi: {result.total}
+        {params.q ? ` — «${params.q}»` : ""}
+      </p>
 
-        <CommunityList items={result.items} />
-      </div>
+      <CommunityList items={result.items} />
     </section>
   );
 }
