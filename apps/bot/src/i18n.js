@@ -22,6 +22,8 @@ const dict = {
     btn_open_tg: "Открыть в Telegram",
     btn_open_site: "На сайте",
     choose_lang: "Выберите язык / Choose language / Tilni tanlang:",
+    welcome_pick_lang:
+      "👋 Underdog\n\nПоиск Telegram-каналов и групп / Find channels & groups / Kanallar va guruhlar qidiruvi\n\nВыберите язык / Choose language / Tilni tanlang:",
     lang_set: "Язык: Русский",
     start:
       "Underdog — поиск Telegram-каналов и групп.\n\nНапишите запрос или откройте Menu слева от поля ввода.\nВ ответе — список названий; номер откроет ссылку и описание.",
@@ -87,6 +89,8 @@ const dict = {
     btn_open_tg: "Open in Telegram",
     btn_open_site: "On website",
     choose_lang: "Choose language / Выберите язык / Tilni tanlang:",
+    welcome_pick_lang:
+      "👋 Underdog\n\nПоиск Telegram-каналов и групп / Find channels & groups / Kanallar va guruhlar qidiruvi\n\nВыберите язык / Choose language / Tilni tanlang:",
     lang_set: "Language: English",
     start:
       "Underdog — find Telegram channels and groups.\n\nType a query or open Menu next to the input.\nYou get a title list; tap a number for the link and details.",
@@ -152,6 +156,8 @@ const dict = {
     btn_open_tg: "Telegramda ochish",
     btn_open_site: "Saytda",
     choose_lang: "Tilni tanlang / Choose language / Выберите язык:",
+    welcome_pick_lang:
+      "👋 Underdog\n\nПоиск Telegram-каналов и групп / Find channels & groups / Kanallar va guruhlar qidiruvi\n\nВыберите язык / Choose language / Tilni tanlang:",
     lang_set: "Til: Oʻzbekcha",
     start:
       "Underdog — Telegram kanallar va guruhlarni qidirish.\n\nSo‘rov yozing yoki kiritish yonidagi Menu ni oching.\nJavobda nomlar ro‘yxati; raqamni bosing — havola va tavsif keladi.",

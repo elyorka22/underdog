@@ -424,8 +424,9 @@ function matchButton(ctx, text) {
 bot.command("start", async (ctx) => {
   trackUser(ctx);
   stats.starts += 1;
-  const lang = langOf(ctx);
-  await ctx.reply(t(lang, "start"), { reply_markup: REMOVE_KEYBOARD });
+  await ctx.reply(t("ru", "welcome_pick_lang"), {
+    reply_markup: languageKeyboard(),
+  });
 });
 
 bot.command("help", replyHelp);
@@ -445,7 +446,14 @@ bot.callbackQuery(/^lang:(ru|en|uz)$/, async (ctx) => {
   }
   setLang(ctx, next);
   await ctx.answerCallbackQuery({ text: LANG_LABELS[next] });
-  await ctx.reply(t(next, "lang_set"), { reply_markup: REMOVE_KEYBOARD });
+  try {
+    await ctx.editMessageReplyMarkup({ reply_markup: { inline_keyboard: [] } });
+  } catch {
+    // ignore if message can't be edited
+  }
+  await ctx.reply(`${t(next, "lang_set")}\n\n${t(next, "start")}`, {
+    reply_markup: REMOVE_KEYBOARD,
+  });
 });
 
 bot.callbackQuery(/^cat:(.+)$/, async (ctx) => {
