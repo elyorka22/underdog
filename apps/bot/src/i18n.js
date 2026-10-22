@@ -24,9 +24,9 @@ const dict = {
     choose_lang: "Выберите язык / Choose language / Tilni tanlang:",
     lang_set: "Язык: Русский",
     start:
-      "Underdog — поиск Telegram-каналов и групп.\n\nНапишите запрос текстом или выберите кнопку.\nВ ответе — список названий; номер откроет ссылку и описание.",
+      "Underdog — поиск Telegram-каналов и групп.\n\nНапишите запрос или откройте Menu слева от поля ввода.\nВ ответе — список названий; номер откроет ссылку и описание.",
     help:
-      "Команды и кнопки:\n• /search — поиск\n• /categories — список тем\n• /popular — топ\n• /site — сайт\n• /lang — язык\n• Меню слева от поля ввода\n\nПосле поиска: список названий + кнопки 1–8.\nНажмите номер — придёт ссылка и описание.",
+      "Команды (кнопка Menu слева от ввода):\n• /search — поиск\n• /categories — темы\n• /popular — топ\n• /site — сайт\n• /lang — язык\n• /help — помощь\n\nИли просто напишите запрос.\nПосле поиска: список названий + кнопки 1–8.",
     help_admin: "• /admin — статистика бота",
     search_hint:
       "Введите запрос следующим сообщением.\nПример: `ai agents` или `крипто`.",
@@ -89,9 +89,9 @@ const dict = {
     choose_lang: "Choose language / Выберите язык / Tilni tanlang:",
     lang_set: "Language: English",
     start:
-      "Underdog — find Telegram channels and groups.\n\nType a query or use a button.\nYou get a title list; tap a number for the link and details.",
+      "Underdog — find Telegram channels and groups.\n\nType a query or open Menu next to the input.\nYou get a title list; tap a number for the link and details.",
     help:
-      "Commands and buttons:\n• /search — search\n• /categories — topics\n• /popular — top\n• /site — website\n• /lang — language\n• Menu next to the input field\n\nAfter search: title list + buttons 1–8.\nTap a number to get the link and description.",
+      "Commands (Menu button next to the input):\n• /search — search\n• /categories — topics\n• /popular — top\n• /site — website\n• /lang — language\n• /help — help\n\nOr just type a query.\nAfter search: title list + buttons 1–8.",
     help_admin: "• /admin — bot stats",
     search_hint:
       "Send your query in the next message.\nExample: `ai agents` or `crypto`.",
@@ -154,9 +154,9 @@ const dict = {
     choose_lang: "Tilni tanlang / Choose language / Выберите язык:",
     lang_set: "Til: Oʻzbekcha",
     start:
-      "Underdog — Telegram kanallar va guruhlarni qidirish.\n\nSo‘rov yozing yoki tugmani bosing.\nJavobda nomlar ro‘yxati; raqamni bosing — havola va tavsif keladi.",
+      "Underdog — Telegram kanallar va guruhlarni qidirish.\n\nSo‘rov yozing yoki kiritish yonidagi Menu ni oching.\nJavobda nomlar ro‘yxati; raqamni bosing — havola va tavsif keladi.",
     help:
-      "Buyruqlar va tugmalar:\n• /search — qidiruv\n• /categories — mavzular\n• /popular — top\n• /site — sayt\n• /lang — til\n• Kiritish maydoni yonidagi menyu\n\nQidiruvdan keyin: nomlar + 1–8 tugmalar.\nRaqamni bosing — havola va tavsif keladi.",
+      "Buyruqlar (kiritish yonidagi Menu):\n• /search — qidiruv\n• /categories — mavzular\n• /popular — top\n• /site — sayt\n• /lang — til\n• /help — yordam\n\nYoki shunchaki so‘rov yozing.\nQidiruvdan keyin: nomlar + 1–8 tugmalar.",
     help_admin: "• /admin — bot statistikasi",
     search_hint:
       "Keyingi xabarda so‘rov yuboring.\nMasalan: `ai agents` yoki `kripto`.",

@@ -1,4 +1,4 @@
-import { Bot, InlineKeyboard, Keyboard } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import {
   getStats,
   listCategories,
@@ -12,6 +12,9 @@ import {
   isLang,
   t,
 } from "./i18n.js";
+
+/** Removes sticky reply keyboard under the input field. */
+const REMOVE_KEYBOARD = { remove_keyboard: true };
 
 const token = process.env.BOT_TOKEN;
 const webUrl = process.env.WEB_URL || "http://localhost:3000";
@@ -83,35 +86,6 @@ function setLang(ctx, lang) {
 function isAdmin(ctx) {
   if (!adminChatId) return false;
   return ctx.chat?.id === adminChatId || ctx.from?.id === adminChatId;
-}
-
-/**
- * @param {import('./i18n.js').Lang} lang
- * @param {boolean} [forAdmin]
- */
-function mainKeyboard(lang, forAdmin = false) {
-  const keyboard = new Keyboard()
-    .text(t(lang, "btn_search"))
-    .text(t(lang, "btn_categories"))
-    .row()
-    .text(t(lang, "btn_popular"))
-    .text(t(lang, "btn_site"))
-    .row()
-    .text(t(lang, "btn_help"))
-    .text(t(lang, "btn_lang"));
-
-  if (forAdmin) {
-    keyboard.row().text(t(lang, "btn_admin"));
-  }
-
-  return keyboard.resized().persistent();
-}
-
-/**
- * @param {import('grammy').Context} ctx
- */
-function keyboardFor(ctx) {
-  return mainKeyboard(langOf(ctx), isAdmin(ctx));
 }
 
 /**
@@ -344,7 +318,7 @@ async function replyAdminStats(ctx) {
 
   await ctx.reply(text, {
     parse_mode: "Markdown",
-    reply_markup: keyboardFor(ctx),
+    reply_markup: REMOVE_KEYBOARD,
   });
 }
 
@@ -357,7 +331,7 @@ async function replyHelp(ctx) {
   const lang = langOf(ctx);
   const lines = [t(lang, "help")];
   if (isAdmin(ctx)) lines.push(t(lang, "help_admin"));
-  await ctx.reply(lines.join("\n"), { reply_markup: keyboardFor(ctx) });
+  await ctx.reply(lines.join("\n"), { reply_markup: REMOVE_KEYBOARD });
 }
 
 /**
@@ -368,7 +342,7 @@ async function replySearchHint(ctx) {
   const lang = langOf(ctx);
   await ctx.reply(t(lang, "search_hint"), {
     parse_mode: "Markdown",
-    reply_markup: keyboardFor(ctx),
+    reply_markup: REMOVE_KEYBOARD,
   });
 }
 
@@ -451,7 +425,7 @@ bot.command("start", async (ctx) => {
   trackUser(ctx);
   stats.starts += 1;
   const lang = langOf(ctx);
-  await ctx.reply(t(lang, "start"), { reply_markup: keyboardFor(ctx) });
+  await ctx.reply(t(lang, "start"), { reply_markup: REMOVE_KEYBOARD });
 });
 
 bot.command("help", replyHelp);
@@ -471,9 +445,7 @@ bot.callbackQuery(/^lang:(ru|en|uz)$/, async (ctx) => {
   }
   setLang(ctx, next);
   await ctx.answerCallbackQuery({ text: LANG_LABELS[next] });
-  await ctx.reply(t(next, "lang_set"), {
-    reply_markup: mainKeyboard(next, isAdmin(ctx)),
-  });
+  await ctx.reply(t(next, "lang_set"), { reply_markup: REMOVE_KEYBOARD });
 });
 
 bot.callbackQuery(/^cat:(.+)$/, async (ctx) => {
