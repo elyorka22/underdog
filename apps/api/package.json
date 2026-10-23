@@ -8,6 +8,7 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "@underdog/db": "*",
     "@underdog/shared": "*",
     "cors": "^2.8.5",
     "express": "^4.21.2"

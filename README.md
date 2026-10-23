@@ -1,99 +1,115 @@
-# Underdog
+# UnderDog
 
-Поиск Telegram-каналов и групп: сайт + API + бот.  
-Сервис-помощник для автосбора — отдельным этапом.
+Поиск Telegram-каналов и групп: сайт + API + бот + helper-автосбор.
 
 ## Стек
 
 - `apps/web` — Next.js сайт
-- `apps/api` — Express API
+- `apps/api` — Express API (Postgres или seed fallback)
 - `apps/bot` — Telegram-бот (grammY)
-- `packages/shared` — общий каталог и логика поиска
+- `apps/helper` — воркер автосбора публичных каналов/групп
+- `packages/shared` — seed + общая логика
+- `packages/db` — Postgres schema, каталог, очередь candidates
 - DigitalOcean Droplet — Docker Compose
 
-Сейчас данные — seed-каталог (демо).
+## Локальный запуск (без Docker БД)
 
-## Локальный запуск
+Без `DATABASE_URL` API работает на seed-данных:
 
 ```bash
 cp .env.example .env
 npm install
-npm run start -w @underdog/api
-npm run dev -w @underdog/web
+npm run start:api
+npm run dev:web
 ```
 
-- Сайт: http://localhost:3000  
-- API: http://localhost:4000/health  
-
-Бот:
+## Запуск с Postgres + helper
 
 ```bash
-# BOT_TOKEN в .env
-npm run dev:bot
+cp .env.example .env
+npm install
+docker compose up -d db
+# дождитесь healthy, затем:
+export DATABASE_URL=postgres://underdog:underdog@localhost:5432/underdog
+npm run db:migrate
+npm run db:seed
+npm run start:api
+npm run start:helper   # или: npm run once -w @underdog/helper
+npm run dev:web
+```
+
+Добавить username в очередь:
+
+```bash
+curl -X POST http://localhost:4000/api/helper/candidates \
+  -H "Content-Type: application/json" \
+  -H "x-admin-token: change-me-admin-token" \
+  -d '{"usernames":["durov","telegram"]}'
 ```
 
 ## Деплой на DigitalOcean Droplet
-
-Нужен Droplet с Ubuntu 22.04+, Docker и Docker Compose.
-
-### 1. На сервере
-
-```bash
-sudo apt update
-sudo apt install -y docker.io docker-compose-v2 git
-sudo usermod -aG docker $USER
-# перелогиньтесь, чтобы группа docker применилась
-```
-
-### 2. Клон и env
 
 ```bash
 git clone https://github.com/elyorka22/underdog.git
 cd underdog
 cp .env.example .env
-nano .env
+nano .env   # IP, BOT_TOKEN, ADMIN_TOKEN, POSTGRES_PASSWORD
 ```
 
-В `.env` замените `YOUR_DROPLET_IP` на публичный IP (или домен):
-
-```env
-WEB_URL=http://YOUR_DROPLET_IP:3000
-NEXT_PUBLIC_API_URL=http://YOUR_DROPLET_IP:4000
-CORS_ORIGIN=http://YOUR_DROPLET_IP:3000
-```
-
-Откройте порты в firewall / DO Cloud Firewall: `3000`, `4000` (и `22`).
-
-### 3. Запуск сайта + API
+Сайт + API + БД:
 
 ```bash
-docker compose up -d --build api web
+docker compose up -d --build db api web
+```
+
+Helper:
+
+```bash
+docker compose --profile helper up -d --build helper
+```
+
+Бот:
+
+```bash
+docker compose --profile bot up -d --build bot
 ```
 
 Проверка:
 
-- http://YOUR_DROPLET_IP:3000 — сайт  
-- http://YOUR_DROPLET_IP:4000/health — API  
+- http://IP:3000 — сайт
+- http://IP:4000/health — `"database": true`
 
-### 4. Бот (опционально)
+## Как работает helper
 
-```bash
-# в .env: BOT_TOKEN=... и ADMIN_CHAT_ID=ваш_chat_id
-docker compose --profile bot up -d --build bot
-```
+### Автопоиск (полноценный)
 
-`ADMIN_CHAT_ID` — числовой ID вашего чата с ботом. Только этому чату видна кнопка «Админ» и команда `/admin` (статистика).
+Нужен **user-аккаунт** Telegram (не бот):
 
-### Полезные команды
+1. Получите `api_id` / `api_hash` на https://my.telegram.org  
+2. Создайте сессию:
 
 ```bash
-docker compose logs -f web api
-docker compose ps
-docker compose down
+export TELEGRAM_API_ID=...
+export TELEGRAM_API_HASH=...
+npm run login -w @underdog/helper
+# вставьте TELEGRAM_SESSION=... в .env
 ```
 
-## Основные сценарии
+3. Запустите helper — он сам крутит ключевые слова (uz/ru/en) и ищет через:
+   - `contacts.search`
+   - `messages.searchGlobal` (каналы и группы)
+   - `channels.getChannelRecommendations`
 
-- Поиск по тексту, типу (канал/группа), категории
-- Карточка сообщества со ссылкой в Telegram
-- Бот: кнопки «Поиск», «Категории», «Популярное», «Сайт» + текстовый поиск
+Найденные публичные `@username` попадают в очередь `candidates`.
+
+### Обработка очереди
+
+1. Берёт `pending` username из `candidates`
+2. Тянет метаданные (Bot API или `t.me` preview)
+3. Пишет в `communities`
+4. Достаёт `@mentions` из описаний → снова в очередь
+5. Паузы `HELPER_DELAY_MS` + обработка FloodWait
+
+Только публичные каналы/группы. Без `TELEGRAM_SESSION` остаётся режим mentions/ручной очереди.
+
+> Используйте отдельный аккаунт, не спамьте запросами — иначе Telegram ограничит поиск.

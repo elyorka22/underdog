@@ -1,0 +1,17 @@
+{
+  "name": "@underdog/helper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "once": "HELPER_ONCE=1 node src/index.js",
+    "login": "node scripts/login.js"
+  },
+  "dependencies": {
+    "@underdog/db": "*",
+    "@underdog/shared": "*",
+    "teleproto": "^1.232.0"
+  }
+}

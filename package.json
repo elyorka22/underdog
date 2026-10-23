@@ -10,10 +10,14 @@
     "dev:api": "npm run dev -w @underdog/api",
     "dev:web": "npm run dev -w @underdog/web",
     "dev:bot": "npm run dev -w @underdog/bot",
+    "dev:helper": "npm run dev -w @underdog/helper",
+    "db:migrate": "npm run migrate -w @underdog/db",
+    "db:seed": "npm run seed -w @underdog/db",
     "build": "npm run build --workspaces --if-present",
     "start:api": "npm run start -w @underdog/api",
     "start:web": "npm run start -w @underdog/web",
-    "start:bot": "npm run start -w @underdog/bot"
+    "start:bot": "npm run start -w @underdog/bot",
+    "start:helper": "npm run start -w @underdog/helper"
   },
   "engines": {
     "node": ">=20"
