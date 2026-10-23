@@ -28,6 +28,9 @@ services:
       DATABASE_URL: postgres://underdog:${POSTGRES_PASSWORD:-underdog}@db:5432/underdog
       API_AUTO_SEED: ${API_AUTO_SEED:-1}
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
       NODE_ENV: production
     depends_on:
       db:

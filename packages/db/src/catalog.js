@@ -147,10 +147,12 @@ export async function upsertCommunity(item) {
     `
     INSERT INTO communities (
       id, username, title, description, type, category_id, language,
-      members_count, tags, verified, telegram_id, status, source, last_checked_at, updated_at
+      members_count, tags, verified, telegram_id, status, source,
+      discovery_query_id, last_checked_at, updated_at
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7,
-      $8, $9, $10, $11, $12, $13, NOW(), NOW()
+      $8, $9, $10, $11, $12, $13,
+      $14, NOW(), NOW()
     )
     ON CONFLICT (username) DO UPDATE SET
       title = EXCLUDED.title,
@@ -166,6 +168,7 @@ export async function upsertCommunity(item) {
       verified = EXCLUDED.verified OR communities.verified,
       telegram_id = COALESCE(EXCLUDED.telegram_id, communities.telegram_id),
       status = EXCLUDED.status,
+      discovery_query_id = COALESCE(EXCLUDED.discovery_query_id, communities.discovery_query_id),
       source = CASE
         WHEN communities.source = 'seed' AND EXCLUDED.source <> 'seed' THEN EXCLUDED.source
         ELSE communities.source
@@ -187,6 +190,7 @@ export async function upsertCommunity(item) {
       item.telegramId || null,
       item.status || "active",
       item.source || "helper",
+      item.discoveryQueryId || null,
     ],
   );
   return id;

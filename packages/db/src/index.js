@@ -28,3 +28,42 @@ export {
   finishHelperRun,
   discoverFromDescriptions,
 } from "./candidates.js";
+export {
+  DEFAULT_SETTINGS,
+  validateSettings,
+  getSettings,
+  saveSettings,
+  isHelperPaused,
+  setHelperPaused,
+  touchHelperHeartbeat,
+  getHelperHeartbeat,
+  getState,
+  setState,
+  writeAudit,
+  writeHelperEvent,
+} from "./settings.js";
+export {
+  seedDiscoveryQueries,
+  listDiscoveryQueries,
+  listRunnableQueries,
+  getDiscoveryQuery,
+  createDiscoveryQuery,
+  updateDiscoveryQuery,
+  deleteDiscoveryQuery,
+  recordQueryRun,
+} from "./discovery-queries.js";
+export {
+  getDashboard,
+  getHelperStatus,
+  listAdminCandidates,
+  retryCandidates,
+  dismissCandidates,
+  listAdminCommunities,
+  updateAdminCommunity,
+  getAnalytics,
+  listAudit,
+  listHelperRuns,
+  listRecentEvents,
+  setHelperCommand,
+  consumeHelperCommand,
+} from "./admin-data.js";

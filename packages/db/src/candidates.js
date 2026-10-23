@@ -25,18 +25,26 @@ export async function enqueueCandidate(username, options = {}) {
 
   const result = await query(
     `
-    INSERT INTO candidates (username, source, category_hint, status)
-    VALUES ($1, $2, $3, 'pending')
+    INSERT INTO candidates (username, source, category_hint, query_id, status, dismissed)
+    VALUES ($1, $2, $3, $4, 'pending', FALSE)
     ON CONFLICT (username) DO UPDATE SET
       updated_at = NOW(),
+      dismissed = FALSE,
       status = CASE
-        WHEN candidates.status = 'failed' AND candidates.attempts < 5 THEN 'pending'
+        WHEN candidates.status IN ('failed', 'skipped') AND candidates.attempts < 8 THEN 'pending'
+        WHEN candidates.dismissed = TRUE THEN 'pending'
         ELSE candidates.status
       END,
-      category_hint = COALESCE(EXCLUDED.category_hint, candidates.category_hint)
+      category_hint = COALESCE(EXCLUDED.category_hint, candidates.category_hint),
+      query_id = COALESCE(EXCLUDED.query_id, candidates.query_id)
     RETURNING id, username, status
     `,
-    [clean, options.source || "manual", options.categoryHint || null],
+    [
+      clean,
+      options.source || "manual",
+      options.categoryHint || null,
+      options.queryId || null,
+    ],
   );
   return result.rows[0] || null;
 }
@@ -63,7 +71,7 @@ export async function claimCandidates(limit = 10) {
     WITH picked AS (
       SELECT id
       FROM candidates
-      WHERE status = 'pending'
+      WHERE status = 'pending' AND dismissed = FALSE
       ORDER BY created_at ASC
       FOR UPDATE SKIP LOCKED
       LIMIT $1

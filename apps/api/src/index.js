@@ -7,6 +7,7 @@ import {
   migrate,
   seedDatabase,
 } from "@underdog/db";
+import { createAdminRouter } from "./admin/routes.js";
 import {
   getCommunity,
   getStats,
@@ -22,14 +23,16 @@ const port = Number(process.env.API_PORT || 4000);
 const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
 const adminToken = process.env.ADMIN_TOKEN || "";
 
+app.set("trust proxy", 1);
 app.use(
   cors({
     origin: corsOrigin.split(",").map((value) => value.trim()),
+    credentials: true,
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
-function requireAdmin(req, res, next) {
+function requireAdminToken(req, res, next) {
   if (!adminToken) {
     res.status(503).json({ error: "ADMIN_TOKEN is not configured" });
     return;
@@ -97,7 +100,7 @@ app.get("/api/communities/:id", async (req, res) => {
   res.json(item);
 });
 
-app.get("/api/helper/stats", requireAdmin, async (_req, res) => {
+app.get("/api/helper/stats", requireAdminToken, async (_req, res) => {
   if (!hasDatabase()) {
     res.status(503).json({ error: "Database is not configured" });
     return;
@@ -105,7 +108,7 @@ app.get("/api/helper/stats", requireAdmin, async (_req, res) => {
   res.json(await getCandidateStats());
 });
 
-app.post("/api/helper/candidates", requireAdmin, async (req, res) => {
+app.post("/api/helper/candidates", requireAdminToken, async (req, res) => {
   if (!hasDatabase()) {
     res.status(503).json({ error: "Database is not configured" });
     return;
@@ -130,6 +133,8 @@ app.post("/api/helper/candidates", requireAdmin, async (req, res) => {
 
   res.json({ added, total: usernames.length });
 });
+
+app.use("/api/admin", createAdminRouter());
 
 async function boot() {
   if (hasDatabase()) {

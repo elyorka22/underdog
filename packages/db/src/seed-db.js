@@ -1,9 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { categories, communities } from "@underdog/shared";
 import { enqueueCandidate } from "./candidates.js";
+import { seedDiscoveryQueries } from "./discovery-queries.js";
 import { migrate } from "./migrate.js";
 import { closePool, hasDatabase, query } from "./pool.js";
 import { upsertCommunity } from "./catalog.js";
+import { getSettings, saveSettings } from "./settings.js";
 
 export async function seedDatabase() {
   if (!hasDatabase()) {
@@ -46,6 +48,9 @@ export async function seedDatabase() {
     WHERE source = 'seed' AND status = 'pending'
     `,
   );
+
+  await seedDiscoveryQueries();
+  await saveSettings(await getSettings());
 }
 
 async function main() {
