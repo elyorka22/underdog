@@ -27,7 +27,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       category: params.category,
       language: params.language,
       sort: params.sort,
-      limit: 30,
+      limit: 50,
     }),
     getCategories(),
   ]);

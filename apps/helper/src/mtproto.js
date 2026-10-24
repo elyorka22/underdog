@@ -70,16 +70,25 @@ export async function searchContacts(tg, query, limit = 20) {
       limit,
     }),
   );
-  return collectPublicChats(result.chats || []);
+  return [
+    ...collectPublicChats(result.chats || []),
+    ...collectPublicBots(result.users || []),
+  ];
 }
 
 /**
  * @param {import('teleproto').TelegramClient} tg
  * @param {string} query
- * @param {'channel' | 'group' | 'all'} [mode]
+ * @param {'channel' | 'group' | 'bot' | 'all'} [mode]
  * @param {number} [limit]
  */
 export async function searchGlobalChats(tg, query, mode = "all", limit = 20) {
+  if (mode === "bot") {
+    return searchContacts(tg, query, limit).then((items) =>
+      items.filter((item) => item.type === "bot"),
+    );
+  }
+
   const result = await tg.invoke(
     new Api.messages.SearchGlobal({
       q: query,
@@ -123,7 +132,7 @@ export async function getRecommendations(tg, username) {
  * @param {any[]} chats
  */
 function collectPublicChats(chats) {
-  /** @type {Array<{ username: string, title: string, type: 'channel' | 'group', membersCount: number, telegramId: number|null, description: string }>} */
+  /** @type {Array<{ username: string, title: string, type: 'channel' | 'group' | 'bot', membersCount: number, telegramId: number|null, description: string }>} */
   const items = [];
 
   for (const chat of chats) {
@@ -137,7 +146,6 @@ function collectPublicChats(chats) {
       if (chat.broadcast) type = "channel";
       if (chat.megagroup) type = "group";
     } else if (className === "Chat") {
-      // basic groups often have no username; skip if no username already handled
       type = "group";
     } else {
       continue;
@@ -149,6 +157,37 @@ function collectPublicChats(chats) {
       type,
       membersCount: Number(chat.participantsCount || 0),
       telegramId: chat.id ? Number(chat.id) : null,
+      description: "",
+    });
+  }
+
+  return items;
+}
+
+/**
+ * @param {any[]} users
+ */
+function collectPublicBots(users) {
+  /** @type {Array<{ username: string, title: string, type: 'channel' | 'group' | 'bot', membersCount: number, telegramId: number|null, description: string }>} */
+  const items = [];
+
+  for (const user of users) {
+    const username = user?.username ? String(user.username).toLowerCase() : "";
+    if (!username) continue;
+    const isBot = Boolean(user.bot || user.botInfo || /bot$/i.test(username));
+    if (!isBot) continue;
+
+    const title = [user.firstName, user.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    items.push({
+      username,
+      title: title || username,
+      type: "bot",
+      membersCount: 0,
+      telegramId: user.id ? Number(user.id) : null,
       description: "",
     });
   }

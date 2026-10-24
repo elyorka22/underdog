@@ -9,6 +9,7 @@ import {
   finishHelperRun,
   getCandidateStats,
   getDiscoveryQuery,
+  getHelperFocus,
   getSettings,
   hasDatabase,
   isHelperPaused,
@@ -143,26 +144,36 @@ async function processBatch(settings, force = {}) {
 
   tick += 1;
 
+  const focus = force.focus || (await getHelperFocus());
+  const focusActive = Boolean(focus?.categoryId);
+
   const shouldDiscover =
     hasMtprotoConfig() &&
-    settings.autoDiscovery &&
-    (force.discover ||
-      force.queryId ||
-      tick === 1 ||
-      tick % Math.max(settings.discoverEvery, 1) === 0);
+    (focusActive ||
+      (settings.autoDiscovery &&
+        (force.discover ||
+          force.queryId ||
+          tick === 1 ||
+          tick % Math.max(settings.discoverEvery, 1) === 0)));
 
   if (shouldDiscover) {
     const discovery = await runGlobalDiscovery({
       queriesPerTick: force.queryId ? 1 : settings.queriesPerTick,
       delayMs: Math.max(settings.delayMs, 1500),
       queryId: force.queryId,
+      focusCategoryId: focusActive ? focus.categoryId : undefined,
+      focusType: focusActive ? focus.type || "all" : "all",
     });
     discovered += discovery.enqueued;
+    if (focusActive) {
+      notes += `focus:${focus.categoryId}/${focus.type} ${Math.ceil((focus.remainingMs || 0) / 60000)}m; `;
+    }
     notes += `global:[${discovery.queries.join(", ")}] +${discovery.enqueued}; `;
     await writeHelperEvent("discovery", {
       queries: discovery.queries,
       enqueued: discovery.enqueued,
       note: discovery.note,
+      focus: discovery.focus,
     });
     console.log("Global discovery", discovery);
   }
@@ -203,15 +214,17 @@ async function processBatch(settings, force = {}) {
           );
         }
 
+        const categoryId = guessCategory(
+          resolved.description,
+          candidate.category_hint || (focusActive ? focus.categoryId : null),
+        );
+
         await upsertCommunity({
           username: resolved.username,
           title: resolved.title,
           description: resolved.description,
           type: resolved.type,
-          categoryId: guessCategory(
-            resolved.description,
-            candidate.category_hint,
-          ),
+          categoryId,
           language,
           membersCount: resolved.membersCount,
           tags: [],
@@ -290,6 +303,7 @@ async function loop() {
     const settings = await loadRuntimeSettings();
     const paused = await isHelperPaused();
     const command = await consumeHelperCommand();
+    const focus = await getHelperFocus();
 
     await touchHelperHeartbeat({
       paused,
@@ -297,6 +311,14 @@ async function loop() {
       command: command || null,
       autoDiscovery: settings.autoDiscovery,
       mtproto: hasMtprotoConfig(),
+      focus: focus
+        ? {
+            categoryId: focus.categoryId,
+            type: focus.type,
+            until: focus.until,
+            remainingMs: focus.remainingMs,
+          }
+        : null,
     });
 
     if (paused && !command) {
@@ -307,20 +329,26 @@ async function loop() {
     }
 
     const stats = await getCandidateStats();
-    if (stats.pending > settings.maxPendingQueue && !command) {
+    if (stats.pending > settings.maxPendingQueue && !command && !focus) {
       console.warn(
         `Pending queue ${stats.pending} exceeds max ${settings.maxPendingQueue}; skipping auto-discovery this tick`,
       );
       settings.autoDiscovery = false;
     }
 
-    /** @type {{ discover?: boolean, processQueue?: boolean, queryId?: number }} */
-    const force = {};
+    /** @type {{ discover?: boolean, processQueue?: boolean, queryId?: number, focus?: object }} */
+    const force = { focus: focus || undefined };
     if (command === "discover") force.discover = true;
     if (command === "process_queue") force.processQueue = true;
     if (command && String(command).startsWith("discover_query:")) {
       force.queryId = Number(String(command).split(":")[1]);
       force.discover = true;
+    }
+
+    if (focus) {
+      console.log(
+        `Helper focus active: ${focus.categoryId}/${focus.type} ~${Math.ceil(focus.remainingMs / 60000)}m left`,
+      );
     }
 
     const result = await processBatch(settings, force);

@@ -10,6 +10,9 @@ export { seedDatabase } from "./seed-db.js";
 export {
   searchCommunities,
   getCommunity,
+  getCategory,
+  createCategory,
+  deleteCategory,
   listCategories,
   listByCategory,
   listPopular,
@@ -39,6 +42,9 @@ export {
   getHelperHeartbeat,
   getState,
   setState,
+  getHelperFocus,
+  setHelperFocus,
+  clearHelperFocus,
   writeAudit,
   writeHelperEvent,
 } from "./settings.js";

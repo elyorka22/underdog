@@ -1,7 +1,12 @@
 import { query } from "./pool.js";
 import { mapCommunity } from "./mappers.js";
 import { getCandidateStats } from "./candidates.js";
-import { getHelperHeartbeat, getSettings, isHelperPaused } from "./settings.js";
+import {
+  getHelperFocus,
+  getHelperHeartbeat,
+  getSettings,
+  isHelperPaused,
+} from "./settings.js";
 
 /**
  * @param {string} [range]
@@ -137,20 +142,22 @@ export async function getDashboard(range = "7d") {
 }
 
 export async function getHelperStatus() {
-  const [heartbeat, paused, settings, candidates, lastRun] = await Promise.all([
-    getHelperHeartbeat(),
-    isHelperPaused(),
-    getSettings(),
-    getCandidateStats(),
-    query(
-      `
+  const [heartbeat, paused, settings, candidates, lastRun, focus] =
+    await Promise.all([
+      getHelperHeartbeat(),
+      isHelperPaused(),
+      getSettings(),
+      getCandidateStats(),
+      query(
+        `
       SELECT *
       FROM helper_runs
       ORDER BY started_at DESC
       LIMIT 1
       `,
-    ),
-  ]);
+      ),
+      getHelperFocus(),
+    ]);
 
   const updatedAt = heartbeat?.updatedAt
     ? new Date(heartbeat.updatedAt).getTime()
@@ -169,6 +176,7 @@ export async function getHelperStatus() {
     heartbeat,
     ageMs,
     settings,
+    focus,
     candidates,
     lastRun: lastRun.rows[0] || null,
     mtprotoConfiguredHint: "Check helper logs/env; secrets are not exposed",

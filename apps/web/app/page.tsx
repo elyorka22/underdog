@@ -24,7 +24,6 @@ export default async function HomePage() {
             Telegram kanallari, chatlari va botlarini mavzu bo‘yicha tez toping.
             Avval turini, keyin kategoriyani tanlang — yoki oddiygina so‘z yozing.
           </p>
-          <HomeDiscover categories={categories.items} />
         </div>
 
         <div className="ud-hero__art">
@@ -37,6 +36,10 @@ export default async function HomePage() {
               TANLANG. QIDIRING. TOPING.
             </div>
           </div>
+        </div>
+
+        <div className="ud-hero__discover">
+          <HomeDiscover categories={categories.items} />
         </div>
       </section>
 

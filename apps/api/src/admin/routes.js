@@ -1,12 +1,17 @@
 import { Router } from "express";
 import {
+  clearHelperFocus,
+  createCategory,
+  deleteCategory,
   createDiscoveryQuery,
   deleteDiscoveryQuery,
   dismissCandidates,
   enqueueMany,
   getAnalytics,
+  getCategory,
   getDashboard,
   getDiscoveryQuery,
+  getHelperFocus,
   getHelperStatus,
   hasDatabase,
   listAdminCandidates,
@@ -20,6 +25,7 @@ import {
   saveSettings,
   getSettings,
   setHelperCommand,
+  setHelperFocus,
   setHelperPaused,
   updateAdminCommunity,
   updateDiscoveryQuery,
@@ -157,6 +163,63 @@ export function createAdminRouter() {
     });
   });
 
+  router.get("/helper/focus", async (_req, res) => {
+    res.json({ focus: await getHelperFocus() });
+  });
+
+  router.post("/helper/focus", async (req, res) => {
+    try {
+      const categoryId = String(req.body?.categoryId || "").trim();
+      const minutes = Number(req.body?.minutes);
+      const type = String(req.body?.type || "all");
+      const category = await getCategory(categoryId);
+      if (!category) {
+        res.status(404).json({ error: "Category not found" });
+        return;
+      }
+      if (type !== "all" && Array.isArray(category.appliesTo)) {
+        if (!category.appliesTo.includes(type)) {
+          res.status(400).json({
+            error: `Category "${category.id}" does not apply to type "${type}"`,
+          });
+          return;
+        }
+      }
+      const focus = await setHelperFocus({
+        categoryId: category.id,
+        categoryTitle: category.title,
+        type,
+        minutes,
+      });
+      await setHelperCommand("discover");
+      await writeAudit({
+        action: "helper_focus_set",
+        entity: "helper",
+        meta: focus,
+        ip: req.ip || "",
+      });
+      res.json({
+        ok: true,
+        focus,
+        message: `Helper will search ${category.title} (${type}) for ${minutes} minutes`,
+      });
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Invalid focus",
+      });
+    }
+  });
+
+  router.delete("/helper/focus", async (req, res) => {
+    await clearHelperFocus();
+    await writeAudit({
+      action: "helper_focus_clear",
+      entity: "helper",
+      ip: req.ip || "",
+    });
+    res.json({ ok: true, focus: null, message: "Focus cleared" });
+  });
+
   router.get("/settings", async (_req, res) => {
     res.json(await getSettings());
   });
@@ -256,8 +319,52 @@ export function createAdminRouter() {
     });
   });
 
-  router.get("/categories", async (_req, res) => {
-    res.json({ items: await listCategories() });
+  router.get("/categories", async (req, res) => {
+    const type =
+      typeof req.query.type === "string" && req.query.type !== "all"
+        ? req.query.type
+        : "all";
+    res.json({ items: await listCategories({ type }) });
+  });
+
+  router.post("/categories", async (req, res) => {
+    try {
+      const item = await createCategory(req.body || {});
+      await writeAudit({
+        action: "category_create",
+        entity: "category",
+        entityId: item.id,
+        meta: { title: item.title, appliesTo: item.appliesTo },
+        ip: req.ip || "",
+      });
+      res.status(201).json(item);
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Invalid category",
+      });
+    }
+  });
+
+  router.delete("/categories/:id", async (req, res) => {
+    try {
+      const item = await deleteCategory(req.params.id);
+      if (!item) {
+        res.status(404).json({ error: "Category not found" });
+        return;
+      }
+      await writeAudit({
+        action: "category_delete",
+        entity: "category",
+        entityId: item.id,
+        meta: { title: item.title },
+        ip: req.ip || "",
+      });
+      res.json({ ok: true, item });
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Delete failed",
+      });
+    }
   });
 
   router.get("/candidates", async (req, res) => {

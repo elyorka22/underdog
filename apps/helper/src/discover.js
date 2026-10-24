@@ -1,5 +1,6 @@
 import {
   enqueueMany,
+  getCategory,
   getDiscoveryQuery,
   listRunnableQueries,
   query,
@@ -41,30 +42,54 @@ async function setQueryIndex(index) {
 }
 
 /**
+ * @param {Array<{ username: string, type: string }>} items
+ * @param {'channel' | 'group' | 'bot' | 'all'} type
+ */
+function filterByType(items, type) {
+  if (!type || type === "all") return items;
+  return items.filter((item) => item.type === type);
+}
+
+/**
  * @param {import('teleproto').TelegramClient} tg
  * @param {{ id?: number, query: string, categoryHint?: string, categoryId?: string, synonyms?: string[] }} item
  * @param {number} delayMs
+ * @param {'channel' | 'group' | 'bot' | 'all'} [searchType]
  */
-async function runOneQuery(tg, item, delayMs) {
+async function runOneQuery(tg, item, delayMs, searchType = "all") {
   const variants = [item.query, ...(item.synonyms || [])].filter(Boolean);
   /** @type {Array<{ username: string, type: string }>} */
   const found = [];
 
   for (const variant of variants.slice(0, 3)) {
-    const contacts = await searchContacts(tg, variant, 25);
-    found.push(...contacts);
-    await sleep(delayMs);
+    if (searchType === "bot") {
+      const bots = await searchGlobalChats(tg, variant, "bot", 25);
+      found.push(...bots);
+      await sleep(delayMs);
+      continue;
+    }
 
-    const channels = await searchGlobalChats(tg, variant, "channel", 25);
-    found.push(...channels);
-    await sleep(delayMs);
+    if (searchType === "all" || searchType === "channel" || searchType === "group") {
+      const contacts = await searchContacts(tg, variant, 25);
+      found.push(...filterByType(contacts, searchType));
+      await sleep(delayMs);
+    }
 
-    const groups = await searchGlobalChats(tg, variant, "group", 25);
-    found.push(...groups);
-    await sleep(delayMs);
+    if (searchType === "all" || searchType === "channel") {
+      const channels = await searchGlobalChats(tg, variant, "channel", 25);
+      found.push(...channels);
+      await sleep(delayMs);
+    }
+
+    if (searchType === "all" || searchType === "group") {
+      const groups = await searchGlobalChats(tg, variant, "group", 25);
+      found.push(...groups);
+      await sleep(delayMs);
+    }
   }
 
-  const usernames = [...new Set(found.map((row) => row.username))];
+  const filtered = filterByType(found, searchType);
+  const usernames = [...new Set(filtered.map((row) => row.username))];
   const categoryHint = item.categoryHint || item.categoryId;
   const added = await enqueueMany(usernames, {
     source: "global_search",
@@ -72,12 +97,12 @@ async function runOneQuery(tg, item, delayMs) {
     queryId: item.id,
   });
 
-  const channelHit = found.find((row) => row.type === "channel");
+  const channelHit = filtered.find((row) => row.type === "channel");
   let relatedAdded = 0;
-  if (channelHit) {
+  if (channelHit && (searchType === "all" || searchType === "channel")) {
     const related = await getRecommendations(tg, channelHit.username);
     relatedAdded = await enqueueMany(
-      related.map((row) => row.username),
+      filterByType(related, searchType).map((row) => row.username),
       {
         source: "recommendations",
         categoryHint,
@@ -102,7 +127,13 @@ async function runOneQuery(tg, item, delayMs) {
 }
 
 /**
- * @param {{ queriesPerTick?: number, delayMs?: number, queryId?: number }} [options]
+ * @param {{
+ *   queriesPerTick?: number,
+ *   delayMs?: number,
+ *   queryId?: number,
+ *   focusCategoryId?: string,
+ *   focusType?: 'channel' | 'group' | 'bot' | 'all',
+ * }} [options]
  */
 export async function runGlobalDiscovery(options = {}) {
   if (!hasMtprotoConfig()) {
@@ -111,11 +142,13 @@ export async function runGlobalDiscovery(options = {}) {
       enqueued: 0,
       queries: [],
       note: "MTProto not configured",
+      focus: null,
     };
   }
 
   const queriesPerTick = Math.max(Number(options.queriesPerTick || 2), 1);
   const delayMs = Number(options.delayMs || process.env.HELPER_DELAY_MS || 2000);
+  const searchType = options.focusType || "all";
   const tg = await getMtprotoClient();
 
   /** @type {Array<{ id?: number, query: string, categoryHint?: string, categoryId?: string, synonyms?: string[] }>} */
@@ -130,6 +163,32 @@ export async function runGlobalDiscovery(options = {}) {
           query: one.query,
           categoryId: one.categoryId || undefined,
           synonyms: one.synonyms,
+        },
+      ];
+    }
+  } else if (options.focusCategoryId) {
+    const focused = await listRunnableQueries(200, {
+      categoryId: options.focusCategoryId,
+    });
+    if (focused.length) {
+      queue = focused.map((item) => ({
+        id: item.id,
+        query: item.query,
+        categoryId: item.categoryId || options.focusCategoryId,
+        synonyms: item.synonyms,
+      }));
+    } else {
+      const category = await getCategory(options.focusCategoryId);
+      const title = category?.title || options.focusCategoryId;
+      const description = category?.description || "";
+      queue = [
+        {
+          query: title,
+          categoryId: options.focusCategoryId,
+          categoryHint: options.focusCategoryId,
+          synonyms: [description, `${title} telegram`, `${title} bot`]
+            .map((value) => String(value || "").trim())
+            .filter((value) => value && value.toLowerCase() !== title.toLowerCase()),
         },
       ];
     }
@@ -156,10 +215,13 @@ export async function runGlobalDiscovery(options = {}) {
       enqueued: 0,
       queries: [],
       note: "no runnable queries",
+      focus: options.focusCategoryId
+        ? { categoryId: options.focusCategoryId, type: searchType }
+        : null,
     };
   }
 
-  let index = options.queryId ? 0 : await getQueryIndex();
+  let index = options.queryId || options.focusCategoryId ? 0 : await getQueryIndex();
   let enqueued = 0;
   /** @type {string[]} */
   const used = [];
@@ -170,7 +232,7 @@ export async function runGlobalDiscovery(options = {}) {
     used.push(item.query);
 
     try {
-      const result = await runOneQuery(tg, item, delayMs);
+      const result = await runOneQuery(tg, item, delayMs, searchType);
       enqueued += result.enqueued;
     } catch (error) {
       const wait = floodWaitSeconds(error);
@@ -194,7 +256,7 @@ export async function runGlobalDiscovery(options = {}) {
     await sleep(delayMs);
   }
 
-  if (!options.queryId) {
+  if (!options.queryId && !options.focusCategoryId) {
     await setQueryIndex(index);
   }
 
@@ -202,6 +264,11 @@ export async function runGlobalDiscovery(options = {}) {
     enabled: true,
     enqueued,
     queries: used,
-    note: "ok",
+    note: options.focusCategoryId
+      ? `focus:${options.focusCategoryId}:${searchType}`
+      : "ok",
+    focus: options.focusCategoryId
+      ? { categoryId: options.focusCategoryId, type: searchType }
+      : null,
   };
 }

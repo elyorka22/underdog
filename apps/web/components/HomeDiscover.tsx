@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Category, CommunityType } from "@/lib/api";
 import { getCategories } from "@/lib/api";
 import { CAT_ICONS, CAT_TAB_COLORS } from "@/lib/brand";
@@ -43,6 +43,7 @@ const TYPE_META: Record<
 export function HomeDiscover({ categories }: HomeDiscoverProps) {
   const [kind, setKind] = useState<Kind>(null);
   const [visibleCategories, setVisibleCategories] = useState<Category[]>([]);
+  const stepRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!kind) {
@@ -59,7 +60,9 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
 
     getCategories(kind)
       .then((result) => {
-        if (!cancelled) setVisibleCategories(result.items);
+        if (cancelled) return;
+        if (result.items?.length) setVisibleCategories(result.items);
+        else setVisibleCategories(fallback);
       })
       .catch(() => {
         if (!cancelled) setVisibleCategories(fallback);
@@ -69,6 +72,11 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
       cancelled = true;
     };
   }, [categories, kind]);
+
+  useEffect(() => {
+    if (!kind || !stepRef.current) return;
+    stepRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [kind]);
 
   const kindMeta = kind ? TYPE_META[kind] : null;
 
@@ -107,7 +115,11 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
           </div>
         </section>
       ) : (
-        <section className="ud-discover__step" aria-labelledby="pick-cat">
+        <section
+          ref={stepRef}
+          className="ud-discover__step"
+          aria-labelledby="pick-cat"
+        >
           <div className="ud-section__head ud-section__head--row">
             <div>
               <h2 id="pick-cat">Endi kategoriyani tanlang</h2>

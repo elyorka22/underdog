@@ -182,3 +182,80 @@ export async function writeHelperEvent(eventType, payload = {}) {
     [eventType, JSON.stringify(payload)],
   );
 }
+
+const FOCUS_TYPES = new Set(["channel", "group", "bot", "all"]);
+
+/**
+ * Active admin focus: helper searches only this category/type until `until`.
+ * @returns {Promise<null | {
+ *   categoryId: string,
+ *   categoryTitle: string,
+ *   type: 'channel'|'group'|'bot'|'all',
+ *   minutes: number,
+ *   startedAt: string,
+ *   until: string,
+ *   remainingMs: number,
+ * }>}
+ */
+export async function getHelperFocus() {
+  const raw = await getState("helper_focus", "");
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed?.categoryId || !parsed?.until) return null;
+    const untilMs = new Date(parsed.until).getTime();
+    if (!Number.isFinite(untilMs) || untilMs <= Date.now()) {
+      await clearHelperFocus();
+      return null;
+    }
+    return {
+      categoryId: String(parsed.categoryId),
+      categoryTitle: String(parsed.categoryTitle || parsed.categoryId),
+      type: FOCUS_TYPES.has(parsed.type) ? parsed.type : "all",
+      minutes: Number(parsed.minutes) || 0,
+      startedAt: String(parsed.startedAt || ""),
+      until: String(parsed.until),
+      remainingMs: untilMs - Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {{ categoryId: string, categoryTitle?: string, type?: string, minutes: number }} input
+ */
+export async function setHelperFocus(input) {
+  const categoryId = String(input.categoryId || "").trim();
+  if (!categoryId) throw new Error("categoryId is required");
+
+  const minutes = Math.round(Number(input.minutes));
+  if (!Number.isFinite(minutes) || minutes < 1 || minutes > 720) {
+    throw new Error("minutes must be between 1 and 720");
+  }
+
+  const type = FOCUS_TYPES.has(input.type) ? String(input.type) : "all";
+  const startedAt = new Date();
+  const until = new Date(startedAt.getTime() + minutes * 60_000);
+  const payload = {
+    categoryId,
+    categoryTitle: String(input.categoryTitle || categoryId),
+    type,
+    minutes,
+    startedAt: startedAt.toISOString(),
+    until: until.toISOString(),
+  };
+
+  await setState("helper_focus", JSON.stringify(payload));
+  await writeHelperEvent("helper_focus_set", payload);
+  return {
+    ...payload,
+    remainingMs: minutes * 60_000,
+  };
+}
+
+export async function clearHelperFocus() {
+  await setState("helper_focus", "");
+  await writeHelperEvent("helper_focus_clear", {});
+  return { ok: true };
+}

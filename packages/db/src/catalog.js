@@ -102,6 +102,120 @@ export async function getCommunity(idOrUsername) {
 }
 
 /**
+ * @param {string} id
+ */
+export async function getCategory(id) {
+  const result = await query(
+    `
+    SELECT cat.id, cat.title, cat.description, cat.applies_to,
+      COUNT(c.id) FILTER (WHERE c.status = 'active')::int AS count
+    FROM categories cat
+    LEFT JOIN communities c ON c.category_id = cat.id
+    WHERE cat.id = $1
+    GROUP BY cat.id, cat.title, cat.description, cat.applies_to
+    `,
+    [id],
+  );
+  return result.rows[0] ? mapCategory(result.rows[0]) : null;
+}
+
+/**
+ * @param {string} value
+ */
+function slugifyCategoryId(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .replace(/_+/g, "_")
+    .slice(0, 48);
+}
+
+/**
+ * @param {{ id?: string, title: string, description?: string, appliesTo?: string[] }} input
+ */
+export async function createCategory(input) {
+  const title = String(input.title || "").trim();
+  if (title.length < 2) throw new Error("title is required");
+
+  let id = slugifyCategoryId(input.id || title);
+  if (!id || !/^[a-z][a-z0-9_]*$/.test(id)) {
+    throw new Error("id must start with a letter and use a-z, 0-9, _");
+  }
+
+  const allowed = ["channel", "group", "bot"];
+  const appliesTo = Array.isArray(input.appliesTo)
+    ? [...new Set(input.appliesTo.map(String).filter((t) => allowed.includes(t)))]
+    : ["channel", "group"];
+  if (!appliesTo.length) {
+    throw new Error("appliesTo must include channel, group, and/or bot");
+  }
+
+  const description = String(input.description || "").trim();
+  try {
+    const result = await query(
+      `
+      INSERT INTO categories (id, title, description, applies_to)
+      VALUES ($1, $2, $3, $4::text[])
+      RETURNING id, title, description, applies_to, 0::int AS count
+      `,
+      [id, title, description, appliesTo],
+    );
+    return mapCategory(result.rows[0]);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "23505") {
+      throw new Error(`category id already exists: ${id}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Detach communities/queries, clear focus if needed, then delete the category.
+ * @param {string} id
+ */
+export async function deleteCategory(id) {
+  const categoryId = String(id || "").trim();
+  if (!categoryId) throw new Error("category id is required");
+
+  const existing = await getCategory(categoryId);
+  if (!existing) return null;
+
+  await query(
+    `UPDATE communities SET category_id = NULL, updated_at = NOW() WHERE category_id = $1`,
+    [categoryId],
+  );
+  await query(
+    `UPDATE discovery_queries SET category_id = NULL, updated_at = NOW() WHERE category_id = $1`,
+    [categoryId],
+  );
+
+  const focusRaw = await query(
+    `SELECT value FROM helper_state WHERE key = 'helper_focus'`,
+  );
+  if (focusRaw.rows[0]?.value) {
+    try {
+      const focus = JSON.parse(focusRaw.rows[0].value);
+      if (focus?.categoryId === categoryId) {
+        await query(
+          `
+          INSERT INTO helper_state (key, value, updated_at)
+          VALUES ('helper_focus', '', NOW())
+          ON CONFLICT (key) DO UPDATE SET value = '', updated_at = NOW()
+          `,
+        );
+      }
+    } catch {
+      // ignore bad focus payload
+    }
+  }
+
+  await query(`DELETE FROM categories WHERE id = $1`, [categoryId]);
+  return existing;
+}
+
+/**
  * @param {{ type?: string }} [filters]
  */
 export async function listCategories(filters = {}) {

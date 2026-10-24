@@ -165,18 +165,28 @@ export async function listDiscoveryQueries(filters = {}) {
 
 /**
  * @param {number} [limit]
+ * @param {{ categoryId?: string }} [filters]
  */
-export async function listRunnableQueries(limit = 200) {
+export async function listRunnableQueries(limit = 200, filters = {}) {
+  const values = [];
+  const where = ["q.enabled = TRUE", "q.auto_run = TRUE"];
+  if (filters.categoryId) {
+    values.push(filters.categoryId);
+    where.push(`q.category_id = $${values.length}`);
+  }
+  values.push(limit);
+  const limitIdx = values.length;
+
   const result = await query(
     `
     SELECT q.*, cat.title AS category_title
     FROM discovery_queries q
     LEFT JOIN categories cat ON cat.id = q.category_id
-    WHERE q.enabled = TRUE AND q.auto_run = TRUE
+    WHERE ${where.join(" AND ")}
     ORDER BY q.priority DESC, q.id ASC
-    LIMIT $1
+    LIMIT $${limitIdx}
     `,
-    [limit],
+    values,
   );
   return result.rows.map(mapQuery);
 }
