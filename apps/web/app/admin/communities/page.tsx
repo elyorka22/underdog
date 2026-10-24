@@ -57,7 +57,8 @@ export default function AdminCommunitiesPage() {
         >
           <option value="">Barcha turlar</option>
           <option value="channel">kanal</option>
-          <option value="group">guruh</option>
+          <option value="group">chat</option>
+          <option value="bot">bot</option>
         </select>
         <button className="admin-btn" type="button" onClick={() => load()}>
           Qo‘llash
@@ -116,7 +117,13 @@ export default function AdminCommunitiesPage() {
                     <strong>{item.title}</strong>
                     <div className="admin-muted">@{item.username}</div>
                   </td>
-                  <td>{item.type === "channel" ? "kanal" : "guruh"}</td>
+                  <td>
+                    {item.type === "channel"
+                      ? "kanal"
+                      : item.type === "bot"
+                        ? "bot"
+                        : "chat"}
+                  </td>
                   <td>{item.membersCount.toLocaleString("uz-UZ")}</td>
                   <td>{item.source}</td>
                   <td>

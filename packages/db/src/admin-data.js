@@ -37,7 +37,8 @@ export async function getDashboard(range = "7d") {
       SELECT
         COUNT(*) FILTER (WHERE status = 'active')::int AS total,
         COUNT(*) FILTER (WHERE status = 'active' AND type = 'channel')::int AS channels,
-        COUNT(*) FILTER (WHERE status = 'active' AND type = 'group')::int AS groups
+        COUNT(*) FILTER (WHERE status = 'active' AND type = 'group')::int AS groups,
+        COUNT(*) FILTER (WHERE status = 'active' AND type = 'bot')::int AS bots
       FROM communities
       `,
     ),
@@ -105,6 +106,7 @@ export async function getDashboard(range = "7d") {
       total: stats.rows[0].total,
       channels: stats.rows[0].channels,
       groups: stats.rows[0].groups,
+      bots: stats.rows[0].bots,
       added24h: added24h.rows[0].n,
       added7d: added7d.rows[0].n,
       addedInRange: addedRange.rows[0].n,

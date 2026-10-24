@@ -4,7 +4,7 @@ import { mapCategory, mapCommunity } from "./mappers.js";
 /**
  * @typedef {object} SearchParams
  * @property {string} [q]
- * @property {'channel' | 'group' | 'all'} [type]
+ * @property {'channel' | 'group' | 'bot' | 'all'} [type]
  * @property {string} [category]
  * @property {string} [language]
  * @property {string} [sort]
@@ -101,16 +101,32 @@ export async function getCommunity(idOrUsername) {
   return result.rows[0] ? mapCommunity(result.rows[0]) : null;
 }
 
-export async function listCategories() {
+/**
+ * @param {{ type?: string }} [filters]
+ */
+export async function listCategories(filters = {}) {
+  const type = filters.type || "all";
+  const values = [];
+  const where = ["TRUE"];
+  if (type !== "all") {
+    values.push(type);
+    where.push(`$1 = ANY (cat.applies_to)`);
+  }
+
+  const joinExtra =
+    type !== "all" ? `AND c.type = $1 AND c.status = 'active'` : `AND c.status = 'active'`;
+
   const result = await query(
     `
-    SELECT cat.id, cat.title, cat.description,
-      COUNT(c.id) FILTER (WHERE c.status = 'active')::int AS count
+    SELECT cat.id, cat.title, cat.description, cat.applies_to,
+      COUNT(c.id)::int AS count
     FROM categories cat
-    LEFT JOIN communities c ON c.category_id = cat.id
-    GROUP BY cat.id, cat.title, cat.description
+    LEFT JOIN communities c ON c.category_id = cat.id ${joinExtra}
+    WHERE ${where.join(" AND ")}
+    GROUP BY cat.id, cat.title, cat.description, cat.applies_to
     ORDER BY cat.title ASC
     `,
+    values,
   );
   return result.rows.map(mapCategory);
 }
@@ -137,6 +153,7 @@ export async function getStats() {
       COUNT(*) FILTER (WHERE status = 'active')::int AS total,
       COUNT(*) FILTER (WHERE status = 'active' AND type = 'channel')::int AS channels,
       COUNT(*) FILTER (WHERE status = 'active' AND type = 'group')::int AS groups,
+      COUNT(*) FILTER (WHERE status = 'active' AND type = 'bot')::int AS bots,
       (SELECT COUNT(*)::int FROM categories) AS categories
     FROM communities
     `,

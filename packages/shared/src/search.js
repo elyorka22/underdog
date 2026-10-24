@@ -4,7 +4,7 @@ import { communities } from "./seed.js";
 /**
  * @typedef {object} SearchParams
  * @property {string} [q]
- * @property {'channel' | 'group' | 'all'} [type]
+ * @property {'channel' | 'group' | 'bot' | 'all'} [type]
  * @property {string} [category]
  * @property {string} [language]
  * @property {string} [sort]
@@ -83,9 +83,22 @@ export function getCommunity(idOrUsername) {
   return found ? enrichCommunity(found) : null;
 }
 
-export function listCategories() {
-  return categories.map((category) => {
-    const count = communities.filter((c) => c.categoryId === category.id).length;
+/**
+ * @param {{ type?: string }} [filters]
+ */
+export function listCategories(filters = {}) {
+  const type = filters.type || "all";
+  const list =
+    type === "all"
+      ? categories
+      : categories.filter((item) => item.appliesTo.includes(/** @type {'channel'|'group'|'bot'} */ (type)));
+
+  return list.map((category) => {
+    const count = communities.filter((c) => {
+      if (c.categoryId !== category.id) return false;
+      if (type !== "all" && c.type !== type) return false;
+      return true;
+    }).length;
     return { ...category, count };
   });
 }
@@ -122,6 +135,7 @@ export function getStats() {
     total: communities.length,
     channels: communities.filter((c) => c.type === "channel").length,
     groups: communities.filter((c) => c.type === "group").length,
+    bots: communities.filter((c) => c.type === "bot").length,
     categories: categories.length,
   };
 }

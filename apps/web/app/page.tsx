@@ -21,8 +21,8 @@ export default async function HomePage() {
             <em>Istalgan paytda toping.</em>
           </h1>
           <p className="ud-hero__lead">
-            Telegram kanallari va guruhlarini mavzu bo‘yicha tez toping. Avval
-            turini, keyin kategoriyani tanlang — yoki oddiygina so‘z yozing.
+            Telegram kanallari, chatlari va botlarini mavzu bo‘yicha tez toping.
+            Avval turini, keyin kategoriyani tanlang — yoki oddiygina so‘z yozing.
           </p>
           <HomeDiscover categories={categories.items} />
         </div>

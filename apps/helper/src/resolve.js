@@ -1,5 +1,5 @@
 /**
- * Resolve public Telegram channel/group metadata.
+ * Resolve public Telegram channel/group/bot metadata.
  * Prefers Bot API when BOT_TOKEN is set, otherwise parses t.me preview HTML.
  */
 
@@ -37,12 +37,19 @@ async function resolveViaBotApi(username, token) {
     membersCount = 0;
   }
 
+  const looksBot =
+    info.type === "private" ||
+    Boolean(info.is_bot) ||
+    /bot$/i.test(info.username || username);
+
   const type =
     info.type === "channel"
       ? "channel"
       : info.type === "group" || info.type === "supergroup"
         ? "group"
-        : null;
+        : looksBot
+          ? "bot"
+          : null;
 
   if (!type) {
     return { skipped: true, reason: `unsupported chat type: ${info.type}` };
@@ -50,7 +57,7 @@ async function resolveViaBotApi(username, token) {
 
   return {
     username: (info.username || username).toLowerCase(),
-    title: info.title || username,
+    title: info.title || info.first_name || username,
     description: info.description || info.bio || "",
     type,
     membersCount,
@@ -136,16 +143,22 @@ function parseTelegramHtml(html, username) {
 
   const membersCount = parseMembers(membersRaw);
   const lower = html.toLowerCase();
+  const looksBot =
+    /bot$/i.test(username) ||
+    /\bbot\b/i.test(membersRaw) ||
+    /tgme_icon_user/i.test(html);
   const looksGroup =
     /subscribers|obunachi|участник|member|members/.test(membersRaw.toLowerCase()) === false &&
     /member|участник|a'zo|azo/.test(membersRaw.toLowerCase());
 
   // Heuristic: preview pages for channels usually say "subscribers"
-  const type = /subscriber|obunachi|подписчик/i.test(membersRaw)
-    ? "channel"
-    : looksGroup || /group|супергруппа|supergroup/i.test(lower)
-      ? "group"
-      : "channel";
+  const type = looksBot
+    ? "bot"
+    : /subscriber|obunachi|подписчик/i.test(membersRaw)
+      ? "channel"
+      : looksGroup || /group|супергруппа|supergroup/i.test(lower)
+        ? "group"
+        : "channel";
 
   if (!title || title.toLowerCase() === "telegram") {
     return null;

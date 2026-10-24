@@ -36,8 +36,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     params.type === "channel"
       ? "Kanallar"
       : params.type === "group"
-        ? "Guruhlar"
-        : "Barcha turlar";
+        ? "Chatlar"
+        : params.type === "bot"
+          ? "Botlar"
+          : "Barcha turlar";
   const langLabel =
     params.language && params.language !== "all"
       ? languageLabel(params.language)

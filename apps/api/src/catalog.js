@@ -23,9 +23,12 @@ export async function getCommunity(idOrUsername) {
   return memory.getCommunity(idOrUsername);
 }
 
-export async function listCategories() {
-  if (hasDatabase()) return dbListCategories();
-  return memory.listCategories();
+/**
+ * @param {{ type?: string }} [filters]
+ */
+export async function listCategories(filters = {}) {
+  if (hasDatabase()) return dbListCategories(filters);
+  return memory.listCategories(filters);
 }
 
 export async function listByCategory(categoryId, limit) {

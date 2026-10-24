@@ -57,12 +57,16 @@ app.get("/api/stats", async (_req, res) => {
   res.json(await getStats());
 });
 
-app.get("/api/categories", async (_req, res) => {
-  res.json({ items: await listCategories() });
+app.get("/api/categories", async (req, res) => {
+  const type =
+    typeof req.query.type === "string" && req.query.type !== "all"
+      ? req.query.type
+      : "all";
+  res.json({ items: await listCategories({ type }) });
 });
 
 app.get("/api/categories/:id", async (req, res) => {
-  const categories = await listCategories();
+  const categories = await listCategories({ type: "all" });
   const result = await listByCategory(
     req.params.id,
     Number(req.query.limit) || 20,

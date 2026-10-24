@@ -44,4 +44,19 @@ export const DISCOVERY_QUERIES = [
   { q: "dota", categoryHint: "games" },
   { q: "gamedev", categoryHint: "games" },
   { q: "cs2", categoryHint: "games" },
+
+  { q: "tanishuv", categoryHint: "dating" },
+  { q: "знакомства", categoryHint: "dating" },
+  { q: "dating chat", categoryHint: "dating" },
+  { q: "anonim chat", categoryHint: "anonymous" },
+  { q: "oldi sotdi", categoryHint: "buy_sell" },
+
+  { q: "telegram bot", categoryHint: "utility_bots" },
+  { q: "chatgpt bot", categoryHint: "ai_bots" },
+  { q: "ai bot", categoryHint: "ai_bots" },
+  { q: "music bot", categoryHint: "music_bots" },
+  { q: "download bot", categoryHint: "download_bots" },
+  { q: "moderation bot", categoryHint: "moderation_bots" },
+  { q: "translate bot", categoryHint: "translate_bots" },
+  { q: "sticker bot", categoryHint: "sticker_bots" },
 ];

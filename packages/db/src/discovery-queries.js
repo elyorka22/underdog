@@ -3,24 +3,78 @@ import { query } from "./pool.js";
 const SUGGESTED = [
   { query: "dasturlash", language: "uz", categoryId: "tech" },
   { query: "IT", language: "uz", categoryId: "tech" },
-  { query: "ish e'lonlari", language: "uz", categoryId: "lifestyle" },
+  { query: "sun'iy intellekt", language: "uz", categoryId: "ai" },
+  { query: "ish e'lonlari", language: "uz", categoryId: "jobs" },
+  { query: "frilans", language: "uz", categoryId: "freelance" },
   { query: "ta'lim", language: "uz", categoryId: "education" },
-  { query: "biznes", language: "uz", categoryId: "marketing" },
-  { query: "программирование", language: "ru", categoryId: "tech" },
-  { query: "вакансии", language: "ru", categoryId: "lifestyle" },
-  { query: "образование", language: "ru", categoryId: "education" },
-  { query: "бизнес", language: "ru", categoryId: "marketing" },
-  { query: "programming", language: "en", categoryId: "tech" },
-  { query: "jobs", language: "en", categoryId: "lifestyle" },
-  { query: "education", language: "en", categoryId: "education" },
-  { query: "startups", language: "en", categoryId: "tech" },
-  { query: "crypto", language: "en", categoryId: "crypto" },
-  { query: "design", language: "en", categoryId: "design" },
-  { query: "smm", language: "en", categoryId: "marketing" },
+  { query: "ingliz tili", language: "uz", categoryId: "languages" },
+  { query: "biznes", language: "uz", categoryId: "business" },
+  { query: "startap", language: "uz", categoryId: "startups" },
+  { query: "marketing", language: "uz", categoryId: "marketing" },
+  { query: "dizayn", language: "uz", categoryId: "design" },
+  { query: "kripto", language: "uz", categoryId: "crypto" },
+  { query: "investitsiya", language: "uz", categoryId: "investing" },
   { query: "yangiliklar", language: "uz", categoryId: "news" },
-  { query: "kino", language: "uz", categoryId: "lifestyle" },
+  { query: "kino", language: "uz", categoryId: "movies" },
+  { query: "musiqa", language: "uz", categoryId: "music" },
+  { query: "futbol", language: "uz", categoryId: "football" },
+  { query: "ovqat", language: "uz", categoryId: "food" },
+  { query: "sayohat", language: "uz", categoryId: "travel" },
+  { query: "avtomobil", language: "uz", categoryId: "cars" },
+  { query: "uy joy", language: "uz", categoryId: "realestate" },
+  { query: "toshkent", language: "uz", categoryId: "tashkent" },
+  { query: "memlar", language: "uz", categoryId: "memes" },
+  { query: "salomatlik", language: "uz", categoryId: "health" },
+  { query: "sport", language: "uz", categoryId: "fitness" },
+  { query: "программирование", language: "ru", categoryId: "tech" },
+  { query: "искусственный интеллект", language: "ru", categoryId: "ai" },
+  { query: "вакансии", language: "ru", categoryId: "jobs" },
+  { query: "фриланс", language: "ru", categoryId: "freelance" },
+  { query: "образование", language: "ru", categoryId: "education" },
+  { query: "английский язык", language: "ru", categoryId: "languages" },
+  { query: "бизнес", language: "ru", categoryId: "business" },
+  { query: "стартапы", language: "ru", categoryId: "startups" },
+  { query: "маркетинг", language: "ru", categoryId: "marketing" },
+  { query: "дизайн", language: "ru", categoryId: "design" },
+  { query: "криптовалюта", language: "ru", categoryId: "crypto" },
+  { query: "инвестиции", language: "ru", categoryId: "investing" },
+  { query: "новости", language: "ru", categoryId: "news" },
+  { query: "фильмы", language: "ru", categoryId: "movies" },
+  { query: "музыка", language: "ru", categoryId: "music" },
+  { query: "футбол", language: "ru", categoryId: "football" },
+  { query: "рецепты", language: "ru", categoryId: "food" },
+  { query: "путешествия", language: "ru", categoryId: "travel" },
+  { query: "автомобили", language: "ru", categoryId: "cars" },
+  { query: "недвижимость", language: "ru", categoryId: "realestate" },
+  { query: "мемы", language: "ru", categoryId: "memes" },
+  { query: "здоровье", language: "ru", categoryId: "health" },
+  { query: "фитнес", language: "ru", categoryId: "fitness" },
+  { query: "programming", language: "en", categoryId: "tech" },
+  { query: "artificial intelligence", language: "en", categoryId: "ai" },
+  { query: "jobs", language: "en", categoryId: "jobs" },
+  { query: "freelance", language: "en", categoryId: "freelance" },
+  { query: "education", language: "en", categoryId: "education" },
+  { query: "english learning", language: "en", categoryId: "languages" },
+  { query: "business", language: "en", categoryId: "business" },
+  { query: "startups", language: "en", categoryId: "startups" },
+  { query: "marketing", language: "en", categoryId: "marketing" },
+  { query: "design", language: "en", categoryId: "design" },
+  { query: "crypto", language: "en", categoryId: "crypto" },
+  { query: "investing", language: "en", categoryId: "investing" },
+  { query: "news", language: "en", categoryId: "news" },
+  { query: "movies", language: "en", categoryId: "movies" },
+  { query: "music", language: "en", categoryId: "music" },
+  { query: "football", language: "en", categoryId: "football" },
+  { query: "recipes", language: "en", categoryId: "food" },
+  { query: "travel", language: "en", categoryId: "travel" },
+  { query: "cars", language: "en", categoryId: "cars" },
+  { query: "real estate", language: "en", categoryId: "realestate" },
+  { query: "memes", language: "en", categoryId: "memes" },
+  { query: "health", language: "en", categoryId: "health" },
+  { query: "fitness", language: "en", categoryId: "fitness" },
   { query: "gamedev", language: "en", categoryId: "games" },
   { query: "python", language: "en", categoryId: "tech" },
+  { query: "smm", language: "en", categoryId: "marketing" },
 ];
 
 /**
@@ -98,9 +152,9 @@ export async function listDiscoveryQueries(filters = {}) {
 
   const result = await query(
     `
-    SELECT q.*, c.title AS category_title
+    SELECT q.*, cat.title AS category_title
     FROM discovery_queries q
-    LEFT JOIN categories c ON c.id = q.category_id
+    LEFT JOIN categories cat ON cat.id = q.category_id
     WHERE ${where.join(" AND ")}
     ORDER BY q.priority DESC, q.id ASC
     `,
@@ -112,14 +166,14 @@ export async function listDiscoveryQueries(filters = {}) {
 /**
  * @param {number} [limit]
  */
-export async function listRunnableQueries(limit = 50) {
+export async function listRunnableQueries(limit = 200) {
   const result = await query(
     `
-    SELECT q.*, c.title AS category_title
+    SELECT q.*, cat.title AS category_title
     FROM discovery_queries q
-    LEFT JOIN categories c ON c.id = q.category_id
+    LEFT JOIN categories cat ON cat.id = q.category_id
     WHERE q.enabled = TRUE AND q.auto_run = TRUE
-    ORDER BY q.priority DESC, COALESCE(q.last_run_at, '1970-01-01'::timestamptz) ASC, q.id ASC
+    ORDER BY q.priority DESC, q.id ASC
     LIMIT $1
     `,
     [limit],
@@ -133,9 +187,9 @@ export async function listRunnableQueries(limit = 50) {
 export async function getDiscoveryQuery(id) {
   const result = await query(
     `
-    SELECT q.*, c.title AS category_title
+    SELECT q.*, cat.title AS category_title
     FROM discovery_queries q
-    LEFT JOIN categories c ON c.id = q.category_id
+    LEFT JOIN categories cat ON cat.id = q.category_id
     WHERE q.id = $1
     `,
     [id],
@@ -233,7 +287,7 @@ export async function recordQueryRun(id, stats = {}) {
       candidates_found = candidates_found + $3,
       communities_found = communities_found + $4,
       last_run_at = NOW(),
-      last_error = NULLIF($5, ''),
+      last_error = $5,
       updated_at = NOW()
     WHERE id = $1
     `,
@@ -242,7 +296,7 @@ export async function recordQueryRun(id, stats = {}) {
       Boolean(stats.empty),
       Number(stats.candidates || 0),
       Number(stats.communities || 0),
-      stats.error || "",
+      stats.error || null,
     ],
   );
 }

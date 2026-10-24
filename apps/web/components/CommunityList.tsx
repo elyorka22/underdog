@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import type { Community } from "@/lib/api";
-import { formatMembers } from "@/lib/api";
+import { formatMembers, typeLabel } from "@/lib/api";
 import { RESULT_COLORS } from "@/lib/brand";
 import { languageLabel, languageShort } from "@/lib/languages";
 
@@ -69,9 +69,7 @@ export function CommunityList({
             {isOpen ? (
               <div className="ud-row__details">
                 <p className="ud-row__meta">
-                  <span className="ud-badge">
-                    {item.type === "channel" ? "Kanal" : "Guruh"}
-                  </span>
+                  <span className="ud-badge">{typeLabel(item.type)}</span>
                   <span className="ud-badge">
                     {languageLabel(item.language)}
                   </span>

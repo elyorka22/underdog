@@ -1,4 +1,4 @@
-/** @typedef {'channel' | 'group'} CommunityType */
+/** @typedef {'channel' | 'group' | 'bot'} CommunityType */
 
 /**
  * @typedef {object} Community

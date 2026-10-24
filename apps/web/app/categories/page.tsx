@@ -23,8 +23,8 @@ export default async function CategoriesPage() {
         Mavzuni tanlang
       </h2>
       <p style={{ margin: 0, color: "var(--muted)", fontSize: 18, maxWidth: 520 }}>
-        Avval kanal yoki guruhni tanlang — keyin shu kategoriya bo‘yicha natijalar
-        ochiladi.
+        Avval kanal, chat yoki botni tanlang — har bir tur uchun o‘ziga xos
+        kategoriyalar bor.
       </p>
 
       <div className="ud-type-grid" style={{ marginTop: 8 }}>
@@ -39,14 +39,22 @@ export default async function CategoriesPage() {
         <Link href="/search?type=group" className="press ud-folder ud-folder--type">
           <span className="ud-folder__tab" style={{ background: "#6BE3B0" }} />
           <span className="ud-folder__icon" aria-hidden>
-            👥
+            💬
           </span>
-          <strong className="ud-folder__title">Guruhlar</strong>
-          <span className="ud-folder__meta">Guruh bo‘yicha qidirish</span>
+          <strong className="ud-folder__title">Chatlar</strong>
+          <span className="ud-folder__meta">Chat va guruhlar</span>
+        </Link>
+        <Link href="/search?type=bot" className="press ud-folder ud-folder--type">
+          <span className="ud-folder__tab" style={{ background: "#FFD60A" }} />
+          <span className="ud-folder__icon" aria-hidden>
+            🤖
+          </span>
+          <strong className="ud-folder__title">Botlar</strong>
+          <span className="ud-folder__meta">Foydali va AI botlar</span>
         </Link>
       </div>
 
-      <h3 style={{ margin: "28px 0 0", fontSize: 22 }}>Yoki kategoriya</h3>
+      <h3 style={{ margin: "28px 0 0", fontSize: 22 }}>Barcha kategoriyalar</h3>
       <div className="ud-folder-grid">
         {items.map((category, index) => (
           <Link

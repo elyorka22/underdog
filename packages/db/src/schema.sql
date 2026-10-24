@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT ''
+  description TEXT NOT NULL DEFAULT '',
+  applies_to TEXT[] NOT NULL DEFAULT ARRAY['channel', 'group']::TEXT[]
 );
 
 CREATE TABLE IF NOT EXISTS communities (
@@ -9,7 +10,7 @@ CREATE TABLE IF NOT EXISTS communities (
   username TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
-  type TEXT NOT NULL CHECK (type IN ('channel', 'group')),
+  type TEXT NOT NULL CHECK (type IN ('channel', 'group', 'bot')),
   category_id TEXT REFERENCES categories(id),
   language TEXT NOT NULL DEFAULT 'uz',
   members_count INTEGER NOT NULL DEFAULT 0,
@@ -23,6 +24,18 @@ CREATE TABLE IF NOT EXISTS communities (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Existing DBs: widen type check and add applies_to without wiping data
+ALTER TABLE communities DROP CONSTRAINT IF EXISTS communities_type_check;
+ALTER TABLE communities
+  ADD CONSTRAINT communities_type_check
+  CHECK (type IN ('channel', 'group', 'bot'));
+
+ALTER TABLE categories
+  ADD COLUMN IF NOT EXISTS applies_to TEXT[] NOT NULL DEFAULT ARRAY['channel', 'group']::TEXT[];
+
+CREATE INDEX IF NOT EXISTS idx_categories_applies_to
+  ON categories USING GIN (applies_to);
 
 CREATE INDEX IF NOT EXISTS idx_communities_members
   ON communities (members_count DESC);

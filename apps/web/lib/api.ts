@@ -3,7 +3,7 @@ const API_URL =
   process.env.API_URL ||
   "http://localhost:4000";
 
-export type CommunityType = "channel" | "group";
+export type CommunityType = "channel" | "group" | "bot";
 
 export type Community = {
   id: string;
@@ -24,6 +24,7 @@ export type Category = {
   id: string;
   title: string;
   description: string;
+  appliesTo?: CommunityType[];
   count: number;
 };
 
@@ -38,6 +39,7 @@ export type Stats = {
   total: number;
   channels: number;
   groups: number;
+  bots: number;
   categories: number;
 };
 
@@ -62,8 +64,10 @@ export function getStats() {
   return apiFetch<Stats>("/api/stats");
 }
 
-export function getCategories() {
-  return apiFetch<{ items: Category[] }>("/api/categories");
+export function getCategories(type?: string) {
+  const suffix =
+    type && type !== "all" ? `?type=${encodeURIComponent(type)}` : "";
+  return apiFetch<{ items: Category[] }>(`/api/categories${suffix}`);
 }
 
 export function getPopular(limit = 8) {
@@ -97,4 +101,11 @@ export function searchCommunities(params: {
 
 export function formatMembers(count: number) {
   return new Intl.NumberFormat("ru-RU").format(count);
+}
+
+export function typeLabel(type: string) {
+  if (type === "channel") return "Kanal";
+  if (type === "group") return "Chat";
+  if (type === "bot") return "Bot";
+  return type;
 }

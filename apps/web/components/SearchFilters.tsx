@@ -63,7 +63,8 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
           [
             { id: "all", label: "Hammasi" },
             { id: "channel", label: "Kanallar" },
-            { id: "group", label: "Guruhlar" },
+            { id: "group", label: "Chatlar" },
+            { id: "bot", label: "Botlar" },
           ] as const
         ).map((item) => (
           <button
@@ -125,7 +126,7 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
         disabled={type === "all"}
         title={
           type === "all"
-            ? "Avval kanal yoki guruhni tanlang"
+            ? "Avval kanal, chat yoki botni tanlang"
             : "Kategoriyani tanlang"
         }
       >
@@ -134,11 +135,17 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
             ? "Avval turini tanlang"
             : "Barcha kategoriyalar"}
         </option>
-        {categories.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.title}
-          </option>
-        ))}
+        {categories
+          .filter((item) => {
+            if (type === "all") return true;
+            const applies = item.appliesTo || ["channel", "group"];
+            return applies.includes(type as "channel" | "group" | "bot");
+          })
+          .map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.title}
+            </option>
+          ))}
       </select>
 
       <select

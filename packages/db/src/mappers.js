@@ -28,6 +28,9 @@ export function mapCategory(row) {
     id: row.id,
     title: row.title,
     description: row.description || "",
+    appliesTo: Array.isArray(row.applies_to)
+      ? row.applies_to
+      : ["channel", "group"],
     count: Number(row.count || 0),
   };
 }

@@ -17,13 +17,19 @@ export async function seedDatabase() {
   for (const category of categories) {
     await query(
       `
-      INSERT INTO categories (id, title, description)
-      VALUES ($1, $2, $3)
+      INSERT INTO categories (id, title, description, applies_to)
+      VALUES ($1, $2, $3, $4::text[])
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
-        description = EXCLUDED.description
+        description = EXCLUDED.description,
+        applies_to = EXCLUDED.applies_to
       `,
-      [category.id, category.title, category.description],
+      [
+        category.id,
+        category.title,
+        category.description,
+        category.appliesTo || ["channel", "group"],
+      ],
     );
   }
 

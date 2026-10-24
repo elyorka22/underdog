@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import type { Category } from "@/lib/api";
+import { useEffect, useState } from "react";
+import type { Category, CommunityType } from "@/lib/api";
+import { getCategories } from "@/lib/api";
 import { CAT_ICONS, CAT_TAB_COLORS } from "@/lib/brand";
 import { SearchForm } from "@/components/SearchForm";
 
@@ -10,16 +11,66 @@ type HomeDiscoverProps = {
   categories: Category[];
 };
 
-type Kind = "channel" | "group" | null;
+type Kind = CommunityType | null;
+
+const TYPE_META: Record<
+  CommunityType,
+  { title: string; meta: string; icon: string; tab: string; label: string }
+> = {
+  channel: {
+    title: "Kanallar",
+    meta: "Yangilik, kontent, e’lonlar",
+    icon: "📣",
+    tab: "#8FB7FF",
+    label: "kanal",
+  },
+  group: {
+    title: "Chatlar",
+    meta: "Suhbat, tanishuv, jamoa",
+    icon: "💬",
+    tab: "#6BE3B0",
+    label: "chat",
+  },
+  bot: {
+    title: "Botlar",
+    meta: "Vosita, AI, o‘yin botlari",
+    icon: "🤖",
+    tab: "#FFD60A",
+    label: "bot",
+  },
+};
 
 export function HomeDiscover({ categories }: HomeDiscoverProps) {
   const [kind, setKind] = useState<Kind>(null);
+  const [visibleCategories, setVisibleCategories] = useState<Category[]>([]);
 
-  const kindLabel = useMemo(() => {
-    if (kind === "channel") return "kanal";
-    if (kind === "group") return "guruh";
-    return "";
-  }, [kind]);
+  useEffect(() => {
+    if (!kind) {
+      setVisibleCategories([]);
+      return;
+    }
+
+    let cancelled = false;
+    const fallback = categories.filter((category) => {
+      const applies = category.appliesTo || ["channel", "group"];
+      return applies.includes(kind);
+    });
+    setVisibleCategories(fallback);
+
+    getCategories(kind)
+      .then((result) => {
+        if (!cancelled) setVisibleCategories(result.items);
+      })
+      .catch(() => {
+        if (!cancelled) setVisibleCategories(fallback);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categories, kind]);
+
+  const kindMeta = kind ? TYPE_META[kind] : null;
 
   return (
     <div className="ud-discover">
@@ -29,39 +80,30 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
         <section className="ud-discover__step" aria-labelledby="pick-type">
           <div className="ud-section__head">
             <h2 id="pick-type">Avval nimani qidiramiz?</h2>
-            <p>Birinchi qadam — kanal yoki guruhni tanlang.</p>
+            <p>Birinchi qadam — kanal, chat yoki botni tanlang.</p>
           </div>
           <div className="ud-type-grid">
-            <button
-              type="button"
-              className="press ud-folder ud-folder--type"
-              onClick={() => setKind("channel")}
-            >
-              <span
-                className="ud-folder__tab"
-                style={{ background: "#8FB7FF" }}
-              />
-              <span className="ud-folder__icon" aria-hidden>
-                📣
-              </span>
-              <strong className="ud-folder__title">Kanallar</strong>
-              <span className="ud-folder__meta">Yangilik, kontent, e’lonlar</span>
-            </button>
-            <button
-              type="button"
-              className="press ud-folder ud-folder--type"
-              onClick={() => setKind("group")}
-            >
-              <span
-                className="ud-folder__tab"
-                style={{ background: "#6BE3B0" }}
-              />
-              <span className="ud-folder__icon" aria-hidden>
-                👥
-              </span>
-              <strong className="ud-folder__title">Guruhlar</strong>
-              <span className="ud-folder__meta">Suhbat, jamoa, muhokama</span>
-            </button>
+            {(Object.keys(TYPE_META) as CommunityType[]).map((id) => {
+              const item = TYPE_META[id];
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className="press ud-folder ud-folder--type"
+                  onClick={() => setKind(id)}
+                >
+                  <span
+                    className="ud-folder__tab"
+                    style={{ background: item.tab }}
+                  />
+                  <span className="ud-folder__icon" aria-hidden>
+                    {item.icon}
+                  </span>
+                  <strong className="ud-folder__title">{item.title}</strong>
+                  <span className="ud-folder__meta">{item.meta}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
       ) : (
@@ -69,10 +111,7 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
           <div className="ud-section__head ud-section__head--row">
             <div>
               <h2 id="pick-cat">Endi kategoriyani tanlang</h2>
-              <p>
-                {kind === "channel" ? "Kanallar" : "Guruhlar"} uchun mavzuni
-                tanlang.
-              </p>
+              <p>{kindMeta?.title} uchun mos mavzular.</p>
             </div>
             <button
               type="button"
@@ -84,7 +123,7 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
           </div>
 
           <div className="ud-folder-grid">
-            {categories.map((category, index) => (
+            {visibleCategories.map((category, index) => (
               <Link
                 key={category.id}
                 href={`/search?type=${kind}&category=${category.id}`}
@@ -107,7 +146,7 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
                     {CAT_ICONS[category.id] || "📁"}
                   </span>
                   <span className="ud-folder__meta">
-                    {category.count} ta {kindLabel}
+                    {category.count} ta {kindMeta?.label}
                   </span>
                 </div>
                 <strong className="ud-folder__title">{category.title}</strong>

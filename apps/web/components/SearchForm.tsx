@@ -7,7 +7,7 @@ import { POPULAR_CHIPS } from "@/lib/brand";
 type SearchFormProps = {
   initialQuery?: string;
   /** Forced community type from the guided flow */
-  forcedType?: "channel" | "group" | "";
+  forcedType?: "channel" | "group" | "bot" | "";
   showChips?: boolean;
 };
 
@@ -31,11 +31,14 @@ export function SearchForm({
     go(query);
   }
 
-  const placeholder = forcedType === "channel"
-    ? "Kanal nomi yoki mavzu…"
-    : forcedType === "group"
-      ? "Guruh nomi yoki mavzu…"
-      : "Nima qidiryapsiz?";
+  const placeholder =
+    forcedType === "channel"
+      ? "Kanal nomi yoki mavzu…"
+      : forcedType === "group"
+        ? "Chat nomi yoki mavzu…"
+        : forcedType === "bot"
+          ? "Bot nomi yoki mavzu…"
+          : "Nima qidiryapsiz?";
 
   return (
     <>

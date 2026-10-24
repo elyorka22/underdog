@@ -1,4 +1,4 @@
-export { categories } from "./categories.js";
+export { categories, categoriesForType } from "./categories.js";
 export { communities } from "./seed.js";
 export {
   searchCommunities,

@@ -35,7 +35,11 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
       <div className="ud-detail">
         <p style={{ margin: 0 }}>
           <span className="ud-badge">
-            {item.type === "channel" ? "Kanal" : "Guruh"}
+            {item.type === "channel"
+              ? "Kanal"
+              : item.type === "bot"
+                ? "Bot"
+                : "Chat"}
           </span>{" "}
           <span className="ud-badge">{languageLabel(item.language)}</span>{" "}
           <span className="ud-badge">{item.categoryTitle}</span>

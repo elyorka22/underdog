@@ -109,7 +109,11 @@ function escapeMarkdown(text) {
  */
 function formatCommunityDetail(lang, item) {
   const typeLabel =
-    item.type === "channel" ? t(lang, "channel") : t(lang, "group");
+    item.type === "channel"
+      ? t(lang, "channel")
+      : item.type === "bot"
+        ? t(lang, "bot")
+        : t(lang, "group");
   const members = item.membersCount.toLocaleString(
     lang === "en" ? "en-US" : lang === "uz" ? "uz-UZ" : "ru-RU",
   );
@@ -184,7 +188,8 @@ function formatResultsList(lang, data) {
   ];
 
   data.items.forEach((item, index) => {
-    const typeMark = item.type === "channel" ? "📢" : "💬";
+    const typeMark =
+      item.type === "channel" ? "📢" : item.type === "bot" ? "🤖" : "💬";
     const langMark = String(item.language || "uz").toUpperCase();
     lines.push(`${index + 1}. ${typeMark} [${langMark}] ${item.title}`);
   });
@@ -313,6 +318,7 @@ async function replyAdminStats(ctx) {
     `${t(lang, "admin_total")}: ${catalog.total}`,
     `${t(lang, "admin_channels")}: ${catalog.channels}`,
     `${t(lang, "admin_groups")}: ${catalog.groups}`,
+    `${t(lang, "admin_bots")}: ${catalog.bots || 0}`,
     `${t(lang, "admin_categories")}: ${catalog.categories}`,
     "",
     `_${escapeMarkdown(t(lang, "admin_note"))}_`,
@@ -384,15 +390,31 @@ async function replyCategories(ctx) {
   trackUser(ctx);
   stats.categoryViews += 1;
   const lang = langOf(ctx);
-  const categories = listCategories();
+  const keyboard = new InlineKeyboard()
+    .text(`📣 ${t(lang, "type_channels")}`, "type:channel")
+    .row()
+    .text(`💬 ${t(lang, "type_chats")}`, "type:group")
+    .row()
+    .text(`🤖 ${t(lang, "type_bots")}`, "type:bot");
+  await ctx.reply(t(lang, "choose_type"), { reply_markup: keyboard });
+}
+
+/**
+ * @param {import('grammy').Context} ctx
+ * @param {'channel' | 'group' | 'bot'} type
+ */
+async function replyCategoriesForType(ctx, type) {
+  const lang = langOf(ctx);
+  const categories = listCategories({ type });
   const keyboard = new InlineKeyboard();
   categories.forEach((category, index) => {
     keyboard.text(
       `${categoryTitle(category.id, lang)} (${category.count})`,
-      `cat:${category.id}`,
+      `cat:${type}:${category.id}`,
     );
     if (index % 2 === 1) keyboard.row();
   });
+  keyboard.row().text(`← ${t(lang, "back")}`, "type:back");
   await ctx.reply(t(lang, "choose_category"), { reply_markup: keyboard });
 }
 
@@ -458,16 +480,28 @@ bot.callbackQuery(/^lang:(ru|en|uz)$/, async (ctx) => {
   });
 });
 
-bot.callbackQuery(/^cat:(.+)$/, async (ctx) => {
+bot.callbackQuery(/^type:(channel|group|bot|back)$/, async (ctx) => {
   trackUser(ctx);
   await ctx.answerCallbackQuery();
-  const categoryId = ctx.match[1];
+  const action = ctx.match[1];
+  if (action === "back") {
+    await replyCategories(ctx);
+    return;
+  }
+  await replyCategoriesForType(ctx, action);
+});
+
+bot.callbackQuery(/^cat:(?:(channel|group|bot):)?(.+)$/, async (ctx) => {
+  trackUser(ctx);
+  await ctx.answerCallbackQuery();
+  const type = ctx.match[1] || "all";
+  const categoryId = ctx.match[2];
   const lang = langOf(ctx);
   stats.searches += 1;
   await sendResults(ctx, {
     q: "",
     category: categoryId,
-    type: "all",
+    type,
     label: categoryTitle(categoryId, lang),
     page: 0,
   });
