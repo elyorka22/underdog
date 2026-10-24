@@ -14,10 +14,10 @@ export function SiteHeader() {
         </Link>
         <nav className="ud-nav" aria-label="Asosiy navigatsiya">
           <Link href="/categories">Kategoriyalar</Link>
-          <Link href="/search">Natijalar</Link>
+          <Link href="/search">Qidiruv</Link>
           <Link href="/#qanday">Qanday ishlaydi</Link>
           <a className="press ud-nav__cta" href={BOT_URL} target="_blank" rel="noreferrer">
-            Telegramda ochish
+            Telegram bot
           </a>
         </nav>
       </div>

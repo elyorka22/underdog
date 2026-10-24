@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Anton, Bowlby_One, Space_Grotesk } from "next/font/google";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppChrome } from "@/components/AppChrome";
 import "./globals.css";
 
 const bowlby = Bowlby_One({
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s · UnderDog",
   },
   description:
-    "Telegram kanal, guruh va mavzularni bitta qidiruvda toping. Hidla. Top. O't.",
+    "Telegram kanallari va guruhlarini mavzu bo‘yicha qidiring. Tez toping, oching.",
 };
 
 export default function RootLayout({
@@ -46,11 +45,7 @@ export default function RootLayout({
             --font-body: var(--font-space), system-ui, sans-serif;
           }
         `}</style>
-        <div id="top">
-          <SiteHeader />
-          <main>{children}</main>
-          <SiteFooter />
-        </div>
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );

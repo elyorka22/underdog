@@ -73,10 +73,10 @@ export default function AdminQueriesPage() {
         synonyms: "",
         priority: 100,
       });
-      toast.show("Query created");
+      toast.show("So‘rov yaratildi");
       await load();
     } catch (err) {
-      toast.show(err instanceof Error ? err.message : "Failed");
+      toast.show(err instanceof Error ? err.message : "Xatolik");
     }
   }
 
@@ -89,12 +89,12 @@ export default function AdminQueriesPage() {
   }
 
   return (
-    <AdminShell title="Search Queries">
+    <AdminShell title="Qidiruv so‘rovlari">
       <div className="admin-panel">
         <form className="admin-row" onSubmit={onCreate}>
           <input
-            className="admin-input"
-            placeholder="Query"
+            className="admin-input admin-grow"
+            placeholder="So‘rov matni"
             value={form.query}
             onChange={(e) => setForm({ ...form, query: e.target.value })}
             required
@@ -104,9 +104,9 @@ export default function AdminQueriesPage() {
             value={form.language}
             onChange={(e) => setForm({ ...form, language: e.target.value })}
           >
-            <option value="uz">uz</option>
-            <option value="ru">ru</option>
-            <option value="en">en</option>
+            <option value="uz">O‘zbek</option>
+            <option value="ru">Rus</option>
+            <option value="en">Ingliz</option>
           </select>
           <select
             className="admin-select"
@@ -120,8 +120,8 @@ export default function AdminQueriesPage() {
             ))}
           </select>
           <input
-            className="admin-input"
-            placeholder="Synonyms, comma-separated"
+            className="admin-input admin-grow"
+            placeholder="Sinonimlar (vergul bilan)"
             value={form.synonyms}
             onChange={(e) => setForm({ ...form, synonyms: e.target.value })}
           />
@@ -132,114 +132,124 @@ export default function AdminQueriesPage() {
             onChange={(e) =>
               setForm({ ...form, priority: Number(e.target.value) })
             }
-            style={{ width: 90 }}
+            aria-label="Prioritet"
+            style={{ width: 110 }}
           />
           <button className="admin-btn primary" type="submit">
-            Add query
+            So‘rov qo‘shish
           </button>
         </form>
       </div>
 
-      <div className="admin-row" style={{ marginTop: 12 }}>
+      <div className="admin-row admin-toolbar" style={{ marginTop: 12 }}>
         <input
-          className="admin-input"
-          placeholder="Filter queries"
+          className="admin-input admin-grow"
+          placeholder="So‘rovlarni filtrlash"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
         <button className="admin-btn" type="button" onClick={() => load()}>
-          Search
+          Qidirish
         </button>
       </div>
 
       <div className="admin-panel">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Query</th>
-              <th>Lang</th>
-              <th>Priority</th>
-              <th>Stats</th>
-              <th>Flags</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <strong>{item.query}</strong>
-                  <div className="admin-muted">{item.categoryId || "—"}</div>
-                </td>
-                <td>{item.language}</td>
-                <td>{item.priority}</td>
-                <td>
-                  run {item.timesRun} / empty {item.timesEmpty}
-                  <br />
-                  cand {item.candidatesFound} / comm {item.communitiesFound}
-                </td>
-                <td>
-                  {item.enabled ? "enabled" : "disabled"}
-                  <br />
-                  {item.autoRun ? "auto" : "manual"}
-                </td>
-                <td className="admin-row">
-                  <button
-                    className="admin-btn"
-                    type="button"
-                    onClick={() =>
-                      patch(item.id, { enabled: !item.enabled }).then(() =>
-                        toast.show("Updated"),
-                      )
-                    }
-                  >
-                    {item.enabled ? "Disable" : "Enable"}
-                  </button>
-                  <button
-                    className="admin-btn"
-                    type="button"
-                    onClick={() =>
-                      patch(item.id, { autoRun: !item.autoRun }).then(() =>
-                        toast.show("Updated"),
-                      )
-                    }
-                  >
-                    {item.autoRun ? "Auto off" : "Auto on"}
-                  </button>
-                  <button
-                    className="admin-btn"
-                    type="button"
-                    onClick={() =>
-                      adminFetch(`/api/admin/queries/${item.id}/run`, {
-                        method: "POST",
-                        body: "{}",
-                      }).then(() => toast.show("Queued for next tick"))
-                    }
-                  >
-                    Run
-                  </button>
-                  <button
-                    className="admin-btn danger"
-                    type="button"
-                    onClick={() => {
-                      if (!confirm(`Delete query "${item.query}"?`)) return;
-                      adminFetch(`/api/admin/queries/${item.id}`, {
-                        method: "DELETE",
-                      }).then(() => {
-                        toast.show("Deleted");
-                        return load();
-                      });
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>So‘rov</th>
+                <th>Til</th>
+                <th>Prioritet</th>
+                <th>Statistika</th>
+                <th>Holat</th>
+                <th>Amallar</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <strong>{item.query}</strong>
+                    <div className="admin-muted">{item.categoryId || "—"}</div>
+                  </td>
+                  <td>{item.language}</td>
+                  <td>{item.priority}</td>
+                  <td>
+                    ishga {item.timesRun} / bo‘sh {item.timesEmpty}
+                    <br />
+                    nomzod {item.candidatesFound} / hamjamiyat{" "}
+                    {item.communitiesFound}
+                  </td>
+                  <td>
+                    {item.enabled ? "yoqilgan" : "o‘chirilgan"}
+                    <br />
+                    {item.autoRun ? "avto" : "qo‘lda"}
+                  </td>
+                  <td>
+                    <div className="admin-actions-col">
+                      <button
+                        className="admin-btn"
+                        type="button"
+                        onClick={() =>
+                          patch(item.id, { enabled: !item.enabled }).then(() =>
+                            toast.show("Yangilandi"),
+                          )
+                        }
+                      >
+                        {item.enabled ? "O‘chirish" : "Yoqish"}
+                      </button>
+                      <button
+                        className="admin-btn"
+                        type="button"
+                        onClick={() =>
+                          patch(item.id, { autoRun: !item.autoRun }).then(() =>
+                            toast.show("Yangilandi"),
+                          )
+                        }
+                      >
+                        {item.autoRun ? "Avtoni o‘chirish" : "Avtoni yoqish"}
+                      </button>
+                      <button
+                        className="admin-btn"
+                        type="button"
+                        onClick={() =>
+                          adminFetch(`/api/admin/queries/${item.id}/run`, {
+                            method: "POST",
+                            body: "{}",
+                          }).then(() =>
+                            toast.show("Keyingi sikl uchun navbatga qo‘yildi"),
+                          )
+                        }
+                      >
+                        Ishga tushirish
+                      </button>
+                      <button
+                        className="admin-btn danger"
+                        type="button"
+                        onClick={() => {
+                          if (!confirm(`“${item.query}” o‘chirilsinmi?`)) return;
+                          adminFetch(`/api/admin/queries/${item.id}`, {
+                            method: "DELETE",
+                          }).then(() => {
+                            toast.show("O‘chirildi");
+                            return load();
+                          });
+                        }}
+                      >
+                        O‘chirish
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {!items.length ? (
-          <div className="admin-muted">No queries yet. Seed runs on migrate/seed.</div>
+          <div className="admin-muted">
+            Hali so‘rovlar yo‘q. Seed ishga tushganda tavsiyalar qo‘shiladi.
+          </div>
         ) : null}
       </div>
       {toast.node}

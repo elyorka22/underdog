@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       });
       router.replace("/admin");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Kirish muvaffaqiyatsiz");
     } finally {
       setLoading(false);
     }
@@ -32,20 +32,20 @@ export default function AdminLoginPage() {
       <form onSubmit={onSubmit}>
         <h1 style={{ margin: 0 }}>UnderDog Admin</h1>
         <p className="admin-muted" style={{ margin: 0 }}>
-          Sign in with ADMIN_PASSWORD (or ADMIN_TOKEN fallback).
+          Admin paroli bilan kiring.
         </p>
         <input
           className="admin-input"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Password"
+          placeholder="Parol"
           autoComplete="current-password"
           required
         />
         {error ? <div className="admin-bad">{error}</div> : null}
         <button className="admin-btn primary" type="submit" disabled={loading}>
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? "Kirilmoqda…" : "Kirish"}
         </button>
       </form>
     </div>

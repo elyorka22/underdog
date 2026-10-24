@@ -7,13 +7,13 @@ export function SiteFooter() {
         <div className="ud-footer__brand">
           <strong>UnderDog</strong>
           <span>
-            UnderDog Telegram bilan rasmiy bog&apos;liq emas. Faqat ochiq kanal
-            va guruhlar qidiriladi.
+            UnderDog Telegram bilan rasmiy bog‘liq emas. Faqat ochiq kanal va
+            guruhlar ko‘rsatiladi.
           </span>
         </div>
         <div className="ud-footer__links">
           <Link href="/categories">Kategoriyalar</Link>
-          <Link href="/search">Natijalar</Link>
+          <Link href="/search">Qidiruv</Link>
           <Link href="/#qanday">Qanday ishlaydi</Link>
           <Link href="/about">Haqida</Link>
         </div>

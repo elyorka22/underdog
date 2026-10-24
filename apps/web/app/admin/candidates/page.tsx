@@ -15,6 +15,14 @@ type Candidate = {
   lastError: string | null;
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "kutmoqda",
+  processing: "ishlanmoqda",
+  done: "tayyor",
+  failed: "xato",
+  skipped: "o‘tkazib yuborilgan",
+};
+
 export default function AdminCandidatesPage() {
   const [items, setItems] = useState<Candidate[]>([]);
   const [total, setTotal] = useState(0);
@@ -52,27 +60,27 @@ export default function AdminCandidatesPage() {
       method: "POST",
       body: JSON.stringify({ ids: selected }),
     });
-    toast.show(`Retried ${selected.length}`);
+    toast.show(`${selected.length} ta qayta urinish`);
     await load();
   }
 
   async function dismissSelected() {
     if (!selected.length) return;
-    if (!confirm(`Dismiss ${selected.length} candidates?`)) return;
+    if (!confirm(`${selected.length} ta nomzod yashirilsinmi?`)) return;
     await adminFetch("/api/admin/candidates/dismiss", {
       method: "POST",
       body: JSON.stringify({ ids: selected }),
     });
-    toast.show(`Dismissed ${selected.length}`);
+    toast.show(`${selected.length} ta yashirildi`);
     await load();
   }
 
   return (
-    <AdminShell title="Candidate Queue">
-      <div className="admin-row">
+    <AdminShell title="Nomzodlar navbati">
+      <div className="admin-row admin-toolbar">
         <input
-          className="admin-input"
-          placeholder="Search username"
+          className="admin-input admin-grow"
+          placeholder="Username bo‘yicha qidirish"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -81,69 +89,78 @@ export default function AdminCandidatesPage() {
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          <option value="">All statuses</option>
-          <option value="pending">pending</option>
-          <option value="processing">processing</option>
-          <option value="done">done</option>
-          <option value="failed">failed</option>
-          <option value="skipped">skipped</option>
+          <option value="">Barcha holatlar</option>
+          <option value="pending">kutmoqda</option>
+          <option value="processing">ishlanmoqda</option>
+          <option value="done">tayyor</option>
+          <option value="failed">xato</option>
+          <option value="skipped">o‘tkazib yuborilgan</option>
         </select>
         <button className="admin-btn" type="button" onClick={() => load()}>
-          Apply
+          Qo‘llash
         </button>
         <button className="admin-btn" type="button" onClick={retrySelected}>
-          Retry selected
+          Tanlanganni qayta urinish
         </button>
-        <button className="admin-btn danger" type="button" onClick={dismissSelected}>
-          Dismiss selected
+        <button
+          className="admin-btn danger"
+          type="button"
+          onClick={dismissSelected}
+        >
+          Tanlanganni yashirish
         </button>
       </div>
 
       <div className="admin-panel">
         <div className="admin-muted" style={{ marginBottom: 8 }}>
-          Total: {total}
+          Jami: {total}
         </div>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Username</th>
-              <th>Status</th>
-              <th>Source</th>
-              <th>Attempts</th>
-              <th>Error</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(item.id)}
-                    onChange={() => toggle(item.id)}
-                  />
-                </td>
-                <td>
-                  @{item.username}
-                  {item.title ? (
-                    <div className="admin-muted">{item.title}</div>
-                  ) : null}
-                </td>
-                <td>{item.status}</td>
-                <td>
-                  {item.source}
-                  {item.sourceQuery ? (
-                    <div className="admin-muted">{item.sourceQuery}</div>
-                  ) : null}
-                </td>
-                <td>{item.attempts}</td>
-                <td className="admin-bad">{item.lastError || "—"}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Username</th>
+                <th>Holat</th>
+                <th>Manba</th>
+                <th>Urinishlar</th>
+                <th>Xato</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {!items.length ? <div className="admin-muted">Queue is empty.</div> : null}
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(item.id)}
+                      onChange={() => toggle(item.id)}
+                      aria-label={`Tanlash ${item.username}`}
+                    />
+                  </td>
+                  <td>
+                    @{item.username}
+                    {item.title ? (
+                      <div className="admin-muted">{item.title}</div>
+                    ) : null}
+                  </td>
+                  <td>{STATUS_LABEL[item.status] || item.status}</td>
+                  <td>
+                    {item.source}
+                    {item.sourceQuery ? (
+                      <div className="admin-muted">{item.sourceQuery}</div>
+                    ) : null}
+                  </td>
+                  <td>{item.attempts}</td>
+                  <td className="admin-bad">{item.lastError || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!items.length ? (
+          <div className="admin-muted">Navbat bo‘sh.</div>
+        ) : null}
       </div>
       {toast.node}
     </AdminShell>

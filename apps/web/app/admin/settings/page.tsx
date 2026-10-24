@@ -56,24 +56,24 @@ export default function AdminSettingsPage() {
       });
       setSettings(saved);
       setBaseline(saved);
-      toast.show("Settings saved — helper applies on next tick");
+      toast.show("Saqlandi — helper keyingi siklda qo‘llaydi");
     } catch (err) {
-      toast.show(err instanceof Error ? err.message : "Save failed");
+      toast.show(err instanceof Error ? err.message : "Saqlash xatosi");
     }
   }
 
   return (
-    <AdminShell title="Settings">
+    <AdminShell title="Sozlamalar">
       <form className="admin-panel" onSubmit={onSave}>
         <p className="admin-muted">
-          These settings are stored in PostgreSQL and read by the helper each
-          tick. Secrets (Telegram session, tokens, DB password) stay in server
-          env only and cannot be edited here.
+          Bu sozlamalar PostgreSQL da saqlanadi va helper har bir siklda
+          o‘qiydi. Maxfiy kalitlar (Telegram session, token, DB parol) faqat
+          server muhitida qoladi va bu yerda ko‘rinmaydi.
         </p>
 
         <div className="admin-grid">
           <label className="admin-card">
-            <div className="label">Auto-discovery</div>
+            <div className="label">Avto-qidiruv</div>
             <input
               type="checkbox"
               checked={settings.autoDiscovery}
@@ -83,7 +83,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Batch size (1-50)</div>
+            <div className="label">Paket hajmi (1–50)</div>
             <input
               className="admin-input"
               type="number"
@@ -94,7 +94,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Interval ms</div>
+            <div className="label">Interval (ms)</div>
             <input
               className="admin-input"
               type="number"
@@ -105,7 +105,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Delay ms</div>
+            <div className="label">Kechikish (ms)</div>
             <input
               className="admin-input"
               type="number"
@@ -116,7 +116,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Discover every N ticks</div>
+            <div className="label">Har N siklda qidiruv</div>
             <input
               className="admin-input"
               type="number"
@@ -130,7 +130,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Queries per tick</div>
+            <div className="label">Sikl uchun so‘rovlar</div>
             <input
               className="admin-input"
               type="number"
@@ -144,7 +144,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Max pending queue</div>
+            <div className="label">Maks. kutayotgan navbat</div>
             <input
               className="admin-input"
               type="number"
@@ -158,7 +158,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Default language</div>
+            <div className="label">Standart til</div>
             <select
               className="admin-select"
               value={settings.defaultLanguage}
@@ -166,25 +166,27 @@ export default function AdminSettingsPage() {
                 setSettings({ ...settings, defaultLanguage: e.target.value })
               }
             >
-              <option value="uz">uz</option>
-              <option value="ru">ru</option>
-              <option value="en">en</option>
+              <option value="uz">O‘zbek</option>
+              <option value="ru">Rus</option>
+              <option value="en">Ingliz</option>
             </select>
           </label>
         </div>
 
         <div className="admin-row" style={{ marginTop: 14 }}>
           <button className="admin-btn primary" type="submit" disabled={!dirty}>
-            Save settings
+            Saqlash
           </button>
           <button
             className="admin-btn"
             type="button"
             onClick={() => setSettings(DEFAULTS)}
           >
-            Reset form to defaults
+            Standartga qaytarish
           </button>
-          {dirty ? <span className="admin-warn">Unsaved changes</span> : null}
+          {dirty ? (
+            <span className="admin-warn">Saqlanmagan o‘zgarishlar bor</span>
+          ) : null}
         </div>
       </form>
       {toast.node}

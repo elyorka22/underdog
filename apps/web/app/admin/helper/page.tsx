@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AdminShell, useToast } from "@/components/admin/AdminShell";
+import {
+  AdminShell,
+  helperStatusLabel,
+  useToast,
+} from "@/components/admin/AdminShell";
 import { adminFetch } from "@/lib/admin-api";
 
 type HelperStatus = {
@@ -59,73 +63,75 @@ export default function AdminHelperPage() {
       toast.show(result.message || label);
       await load();
     } catch (err) {
-      toast.show(err instanceof Error ? err.message : "Failed");
+      toast.show(err instanceof Error ? err.message : "Xatolik");
     }
   }
 
   return (
-    <AdminShell title="Helper Control">
+    <AdminShell title="Helper boshqaruvi">
       {!status ? (
-        <div className="admin-muted">Loading helper status…</div>
+        <div className="admin-muted">Helper holati yuklanmoqda…</div>
       ) : (
         <>
           <div className="admin-grid">
             <div className="admin-card">
-              <div className="label">Status</div>
-              <div className="value">{status.status}</div>
+              <div className="label">Holat</div>
+              <div className="value">{helperStatusLabel(status.status)}</div>
             </div>
             <div className="admin-card">
-              <div className="label">Paused</div>
-              <div className="value">{status.paused ? "yes" : "no"}</div>
+              <div className="label">Pauza</div>
+              <div className="value">{status.paused ? "ha" : "yo‘q"}</div>
             </div>
             <div className="admin-card">
-              <div className="label">Heartbeat age</div>
+              <div className="label">Heartbeat yoshi</div>
               <div className="value" style={{ fontSize: "1rem" }}>
                 {status.ageMs == null
-                  ? "unknown"
+                  ? "noma’lum"
                   : `${Math.round(status.ageMs / 1000)}s`}
               </div>
             </div>
             <div className="admin-card">
-              <div className="label">Pending</div>
+              <div className="label">Kutayotgan</div>
               <div className="value">{status.candidates.pending}</div>
             </div>
             <div className="admin-card">
-              <div className="label">Failed</div>
+              <div className="label">Muvaffaqiyatsiz</div>
               <div className="value">{status.candidates.failed}</div>
             </div>
             <div className="admin-card">
-              <div className="label">Auto-discovery</div>
+              <div className="label">Avto-qidiruv</div>
               <div className="value">
-                {String(status.settings.autoDiscovery)}
+                {status.settings.autoDiscovery ? "yoqilgan" : "o‘chirilgan"}
               </div>
             </div>
           </div>
 
           <div className="admin-panel">
-            <div className="admin-row">
+            <div className="admin-actions-col">
               <button
                 className="admin-btn"
                 type="button"
-                onClick={() => action("/api/admin/helper/pause", "Paused")}
+                onClick={() => action("/api/admin/helper/pause", "Pauza qilindi")}
               >
-                Pause
+                Pauza
               </button>
               <button
                 className="admin-btn primary"
                 type="button"
-                onClick={() => action("/api/admin/helper/resume", "Resumed")}
+                onClick={() =>
+                  action("/api/admin/helper/resume", "Davom ettirildi")
+                }
               >
-                Resume
+                Davom ettirish
               </button>
               <button
                 className="admin-btn"
                 type="button"
                 onClick={() =>
-                  action("/api/admin/helper/discover", "Discovery requested")
+                  action("/api/admin/helper/discover", "Qidiruv so‘raldi")
                 }
               >
-                Trigger discovery
+                Qidiruvni ishga tushirish
               </button>
               <button
                 className="admin-btn"
@@ -133,60 +139,63 @@ export default function AdminHelperPage() {
                 onClick={() =>
                   action(
                     "/api/admin/helper/process-queue",
-                    "Queue processing requested",
+                    "Navbat qayta ishlash so‘raldi",
                   )
                 }
               >
-                Process queue
+                Navbatni qayta ishlash
               </button>
               <button className="admin-btn" type="button" onClick={() => load()}>
-                Refresh
+                Yangilash
               </button>
             </div>
-            <p className="admin-muted" style={{ marginBottom: 0 }}>
-              Pause/resume and settings apply through the database. Helper picks
-              them up on the next tick — no Docker rebuild needed. Start/stop of
-              the container itself is done via Docker Compose on the server.
+            <p className="admin-muted" style={{ marginBottom: 0, marginTop: 12 }}>
+              Pauza va sozlamalar ma’lumotlar bazasi orqali qo‘llanadi. Helper
+              keyingi siklda o‘qiydi — Docker qayta build qilish shart emas.
+              Konteynerni to‘liq to‘xtatish serverda Docker Compose orqali
+              qilinadi.
             </p>
           </div>
 
           <div className="admin-panel">
-            <h3 style={{ marginTop: 0 }}>Runtime settings (live)</h3>
-            <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+            <h3>Joriy sozlamalar</h3>
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: "0.85rem" }}>
               {JSON.stringify(status.settings, null, 2)}
             </pre>
           </div>
 
           <div className="admin-panel">
-            <h3 style={{ marginTop: 0 }}>Recent runs</h3>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Started</th>
-                  <th>Duration</th>
-                  <th>Processed</th>
-                  <th>OK</th>
-                  <th>Fail</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {runs.map((run) => (
-                  <tr key={run.id}>
-                    <td>{new Date(run.startedAt).toLocaleString()}</td>
-                    <td>
-                      {run.durationMs == null
-                        ? "—"
-                        : `${Math.round(run.durationMs / 1000)}s`}
-                    </td>
-                    <td>{run.processed}</td>
-                    <td>{run.succeeded}</td>
-                    <td>{run.failed}</td>
-                    <td>{run.notes || "—"}</td>
+            <h3>So‘nggi ishga tushirishlar</h3>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Boshlangan</th>
+                    <th>Davomiylik</th>
+                    <th>Qayta ishlangan</th>
+                    <th>OK</th>
+                    <th>Xato</th>
+                    <th>Izoh</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {runs.map((run) => (
+                    <tr key={run.id}>
+                      <td>{new Date(run.startedAt).toLocaleString("uz-UZ")}</td>
+                      <td>
+                        {run.durationMs == null
+                          ? "—"
+                          : `${Math.round(run.durationMs / 1000)}s`}
+                      </td>
+                      <td>{run.processed}</td>
+                      <td>{run.succeeded}</td>
+                      <td>{run.failed}</td>
+                      <td>{run.notes || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}

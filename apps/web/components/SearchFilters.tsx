@@ -27,56 +27,104 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
   const [category, setCategory] = useState(initial.category);
   const [sort, setSort] = useState(initial.sort);
 
+  function push(next: {
+    q?: string;
+    type?: string;
+    category?: string;
+    sort?: string;
+  }) {
+    const params = new URLSearchParams();
+    const nextQ = next.q ?? q;
+    const nextType = next.type ?? type;
+    const nextCategory = next.category ?? category;
+    const nextSort = next.sort ?? sort;
+    if (nextQ.trim()) params.set("q", nextQ.trim());
+    if (nextType !== "all") params.set("type", nextType);
+    if (nextCategory !== "all") params.set("category", nextCategory);
+    if (nextSort !== "members") params.set("sort", nextSort);
+    router.push(`/search?${params.toString()}`);
+  }
+
   function apply(event: FormEvent) {
     event.preventDefault();
-    const params = new URLSearchParams();
-    if (q.trim()) params.set("q", q.trim());
-    if (type !== "all") params.set("type", type);
-    if (category !== "all") params.set("category", category);
-    if (sort !== "members") params.set("sort", sort);
-    router.push(`/search?${params.toString()}`);
+    push({});
   }
 
   return (
     <form className="ud-filters" onSubmit={apply}>
+      <div className="ud-type-pills" role="group" aria-label="Tur">
+        {(
+          [
+            { id: "all", label: "Hammasi" },
+            { id: "channel", label: "Kanallar" },
+            { id: "group", label: "Guruhlar" },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`press ud-tab ${type === item.id ? "is-active" : ""}`}
+            onClick={() => {
+              setType(item.id);
+              setCategory("all");
+              push({ type: item.id, category: "all" });
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <input
         value={q}
         onChange={(event) => setQ(event.target.value)}
-        placeholder="So'rov"
-        aria-label="So'rov"
+        placeholder="Qidiruv so‘zi"
+        aria-label="Qidiruv so‘zi"
       />
-      <select
-        value={type}
-        onChange={(event) => setType(event.target.value)}
-        aria-label="Tur"
-      >
-        <option value="all">Barcha turlar</option>
-        <option value="channel">Kanallar</option>
-        <option value="group">Guruhlar</option>
-      </select>
+
       <select
         value={category}
-        onChange={(event) => setCategory(event.target.value)}
+        onChange={(event) => {
+          const value = event.target.value;
+          setCategory(value);
+          push({ category: value });
+        }}
         aria-label="Kategoriya"
+        disabled={type === "all"}
+        title={
+          type === "all"
+            ? "Avval kanal yoki guruhni tanlang"
+            : "Kategoriyani tanlang"
+        }
       >
-        <option value="all">Barcha kategoriyalar</option>
+        <option value="all">
+          {type === "all"
+            ? "Avval turini tanlang"
+            : "Barcha kategoriyalar"}
+        </option>
         {categories.map((item) => (
           <option key={item.id} value={item.id}>
             {item.title}
           </option>
         ))}
       </select>
+
       <select
         value={sort}
-        onChange={(event) => setSort(event.target.value)}
+        onChange={(event) => {
+          const value = event.target.value;
+          setSort(value);
+          push({ sort: value });
+        }}
         aria-label="Saralash"
       >
-        <option value="members">Obunachilar bo'yicha</option>
-        <option value="title">Nom bo'yicha</option>
-        <option value="newest">Yangi</option>
+        <option value="members">Obunachilar bo‘yicha</option>
+        <option value="title">Nom bo‘yicha</option>
+        <option value="newest">Yangilari</option>
       </select>
+
       <button className="press" type="submit">
-        Qo&apos;llash
+        Qidirish
       </button>
     </form>
   );

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CommunityList } from "@/components/CommunityList";
-import { DogHero, PawIcon } from "@/components/DogMark";
-import { SearchForm } from "@/components/SearchForm";
+import { DogHero } from "@/components/DogMark";
+import { HomeDiscover } from "@/components/HomeDiscover";
 import { getCategories, getPopular } from "@/lib/api";
-import { CAT_COLORS, CAT_ROTATIONS, STEPS } from "@/lib/brand";
+import { STEPS } from "@/lib/brand";
 
 export default async function HomePage() {
   const [popular, categories] = await Promise.all([
@@ -13,28 +13,28 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="shell ud-hero">
+      <section className="shell ud-hero ud-hero--home">
         <div className="ud-hero__copy">
-          <div className="ud-stamp ud-stamp--pink">TELEGRAM QIDIRUV SAYTI</div>
+          <div className="ud-stamp ud-stamp--pink">TELEGRAM QIDIRUV</div>
           <h1>
-            Telegramda yo&apos;qolganni it kabi{" "}
-            <em>hidlab topamiz.</em>
+            Hozir qidiring.{" "}
+            <em>Istalgan paytda toping.</em>
           </h1>
           <p className="ud-hero__lead">
-            Kanal, guruh, bot va xabarlar. Hammasini bitta qidiruvda toping. Bir
-            marta hidla, keyin Telegramga o&apos;ting.
+            Telegram kanallari va guruhlarini mavzu bo‘yicha tez toping. Avval
+            turini, keyin kategoriyani tanlang — yoki oddiygina so‘z yozing.
           </p>
-          <SearchForm />
+          <HomeDiscover categories={categories.items} />
         </div>
 
         <div className="ud-hero__art">
           <div className="ud-dog-card">
-            <div className="ud-dog-card__bubble">VAU! NIMA QIDIRYAPSAN?</div>
+            <div className="ud-dog-card__bubble">NIMA QIDIRYAPSIZ?</div>
             <div className="ud-dog">
               <DogHero />
             </div>
             <div className="ud-dog-card__caption">
-              QIDIRUV QILDING. HID OLDIM. TOPDIM.
+              TANLANG. QIDIRING. TOPING.
             </div>
           </div>
         </div>
@@ -43,55 +43,24 @@ export default async function HomePage() {
       <div className="ud-marquee" aria-hidden>
         <div className="ud-track">
           <span>
-            HID OL • TOP • HAVLA • OLIB KEL • HID OL • TOP • HAVLA • OLIB KEL •
-            HID OL • TOP • HAVLA • OLIB KEL •&nbsp;
+            QIDIR • TOP • OCH • ULASH • QIDIR • TOP • OCH • ULASH • QIDIR • TOP
+            • OCH • ULASH •&nbsp;
           </span>
           <span>
-            HID OL • TOP • HAVLA • OLIB KEL • HID OL • TOP • HAVLA • OLIB KEL •
-            HID OL • TOP • HAVLA • OLIB KEL •&nbsp;
+            QIDIR • TOP • OCH • ULASH • QIDIR • TOP • OCH • ULASH • QIDIR • TOP
+            • OCH • ULASH •&nbsp;
           </span>
         </div>
       </div>
-
-      <section id="kategoriya" className="shell ud-section--cats">
-        <div className="ud-section__head">
-          <h2>Qaysi hid bilan izlaymiz?</h2>
-          <p>
-            Mavzuni tanla, UnderDog tegishli kanal va guruhlarni olib keladi.
-          </p>
-        </div>
-        <div className="ud-cat-grid">
-          {categories.items.map((category, index) => (
-            <Link
-              key={category.id}
-              href={`/search?category=${category.id}`}
-              className="press ud-cat shadow-md"
-              style={{
-                background: CAT_COLORS[index % CAT_COLORS.length],
-                transform: `rotate(${CAT_ROTATIONS[index % CAT_ROTATIONS.length]})`,
-              }}
-            >
-              <PawIcon />
-              <div>
-                <div className="ud-cat__name">{category.title}</div>
-                <div className="ud-cat__note">
-                  {category.description} · {category.count} ta
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
 
       <section id="natija" className="shell ud-section">
         <div className="ud-results-wrap">
           <div className="ud-results-copy">
             <div className="ud-stamp ud-stamp--yellow">NAMUNA</div>
-            <h2>Natija shunaqa ko&apos;rinadi.</h2>
+            <h2>Natija shunday ko‘rinadi</h2>
             <p>
-              Har bir natijada nom, qisqa tavsif va Telegramga to&apos;g&apos;ridan-to&apos;g&apos;ri
-              o&apos;tish tugmasi bo&apos;ladi. Ortiqcha reklama yo&apos;q, faqat topilgan
-              narsa.
+              Har bir natijada nom, qisqa tavsif va Telegramga to‘g‘ridan-to‘g‘ri
+              o‘tish tugmasi bor. Keraksiz reklama yo‘q.
             </p>
             <Link className="press ud-btn ud-btn--yellow shadow-sm" href="/search">
               Barcha natijalar
@@ -103,7 +72,7 @@ export default async function HomePage() {
 
       <section id="qanday" className="shell ud-section">
         <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-          <h2>Uch qadam. Uch vov.</h2>
+          <h2>Uch qadam. Juda oddiy.</h2>
           <div className="ud-steps">
             {STEPS.map((step) => (
               <div
@@ -123,10 +92,10 @@ export default async function HomePage() {
       <section className="ud-cta">
         <div className="shell ud-cta__inner">
           <div className="ud-cta__copy">
-            <h2>Hali ham topolmayapsanmi? Itga ayt.</h2>
+            <h2>Hali topa olmadingizmi?</h2>
             <p>
-              UnderDog ko&apos;cha-ko&apos;yda emas, Telegramning eng chuqur
-              burchaklarida ham hidlaydi.
+              Turini tanlang, kategoriyani belgilang yoki so‘z yozib qidiring —
+              UnderDog ochiq katalogdan yordam beradi.
             </p>
           </div>
           <a className="press ud-cta__btn shadow-md" href="#top">

@@ -12,6 +12,28 @@ export const CAT_COLORS = [
   "#6BE3B0",
 ];
 
+export const CAT_TAB_COLORS = [
+  "#C8C5D8",
+  "#6BE3B0",
+  "#FFE08A",
+  "#B8E986",
+  "#FF4F8B",
+  "#C9A0FF",
+  "#8FB7FF",
+  "#FFD60A",
+];
+
+export const CAT_ICONS: Record<string, string> = {
+  tech: "⚡",
+  education: "📚",
+  crypto: "🪙",
+  design: "🎨",
+  marketing: "📢",
+  news: "📰",
+  games: "🎮",
+  lifestyle: "☕",
+};
+
 export const CAT_ROTATIONS = [
   "-1.5deg",
   "1deg",
@@ -30,20 +52,20 @@ export const POPULAR_CHIPS = ["memlar", "dasturlash", "ish e'lonlari", "kino"];
 export const STEPS = [
   {
     num: "1",
-    title: "Yoz",
-    text: "So'z, mavzu yoki kanal nomini qidiruv satriga kiriting.",
+    title: "Turini tanlang",
+    text: "Avval kanal yoki guruhni tanlang — qidiruv aniqroq bo‘ladi.",
     bg: "#FFD60A",
   },
   {
     num: "2",
-    title: "Hidla",
-    text: "UnderDog kanal, guruh, bot va xabarlar bo'ylab natijalarni yig'adi.",
+    title: "Kategoriya",
+    text: "Keyin kerakli mavzuni tanlang: IT, ta’lim, ish va boshqalar.",
     bg: "#6BE3B0",
   },
   {
     num: "3",
-    title: "Ket",
-    text: "Kerakli natijani tanlab, bir bosishda Telegramga o'ting.",
+    title: "Telegramga o‘ting",
+    text: "Natijani ochib, bir bosishda Telegramga o‘ting.",
     bg: "#8FB7FF",
   },
 ];

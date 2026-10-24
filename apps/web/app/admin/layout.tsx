@@ -1,7 +1,7 @@
 import "../admin/admin.css";
 
 export const metadata = {
-  title: "UnderDog Admin",
+  title: "UnderDog Admin — Boshqaruv",
   robots: { index: false, follow: false },
 };
 

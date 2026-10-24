@@ -22,32 +22,34 @@ export default function AdminCategoriesPage() {
   }, []);
 
   return (
-    <AdminShell title="Categories">
+    <AdminShell title="Kategoriyalar">
       <div className="admin-panel">
         <p className="admin-muted">
-          Categories come from the existing catalog table. Assign queries to
-          these categories on the Search Queries page.
+          Kategoriyalar katalog jadvalidan olinadi. So‘rovlarni ularga «Qidiruv
+          so‘rovlari» sahifasida biriktiring.
         </p>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Communities</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.title}</td>
-                <td>{item.description}</td>
-                <td>{item.count}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table compact">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Tavsif</th>
+                <th>Hamjamiyatlar</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.title}</td>
+                  <td>{item.description}</td>
+                  <td>{item.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {toast.node}
     </AdminShell>

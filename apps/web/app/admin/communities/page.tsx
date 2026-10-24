@@ -42,11 +42,11 @@ export default function AdminCommunitiesPage() {
   }, []);
 
   return (
-    <AdminShell title="Community Catalog">
-      <div className="admin-row">
+    <AdminShell title="Hamjamiyatlar katalogi">
+      <div className="admin-row admin-toolbar">
         <input
-          className="admin-input"
-          placeholder="Search title or username"
+          className="admin-input admin-grow"
+          placeholder="Nom yoki username bo‘yicha qidirish"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -55,12 +55,12 @@ export default function AdminCommunitiesPage() {
           value={type}
           onChange={(e) => setType(e.target.value)}
         >
-          <option value="">All types</option>
-          <option value="channel">channel</option>
-          <option value="group">group</option>
+          <option value="">Barcha turlar</option>
+          <option value="channel">kanal</option>
+          <option value="group">guruh</option>
         </select>
         <button className="admin-btn" type="button" onClick={() => load()}>
-          Apply
+          Qo‘llash
         </button>
         <button
           className="admin-btn"
@@ -74,7 +74,7 @@ export default function AdminCommunitiesPage() {
                 `${getAdminApiBase()}/api/admin/communities/export.csv?${params}`,
                 { credentials: "include" },
               );
-              if (!response.ok) throw new Error("Export failed");
+              if (!response.ok) throw new Error("Eksport muvaffaqiyatsiz");
               const blob = await response.blob();
               const url = URL.createObjectURL(blob);
               const link = document.createElement("a");
@@ -83,63 +83,74 @@ export default function AdminCommunitiesPage() {
               link.click();
               URL.revokeObjectURL(url);
             } catch (err) {
-              toast.show(err instanceof Error ? err.message : "Export failed");
+              toast.show(
+                err instanceof Error ? err.message : "Eksport muvaffaqiyatsiz",
+              );
             }
           }}
         >
-          Export CSV
+          CSV yuklab olish
         </button>
       </div>
 
       <div className="admin-panel">
         <div className="admin-muted" style={{ marginBottom: 8 }}>
-          Total: {total}
+          Jami: {total}
         </div>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Members</th>
-              <th>Source</th>
-              <th>Flags</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <strong>{item.title}</strong>
-                  <div className="admin-muted">@{item.username}</div>
-                </td>
-                <td>{item.type}</td>
-                <td>{item.membersCount.toLocaleString()}</td>
-                <td>{item.source}</td>
-                <td>
-                  {item.flagged ? "flagged" : "ok"} / {item.visibility}
-                </td>
-                <td className="admin-row">
-                  <a className="admin-btn" href={item.telegramUrl} target="_blank" rel="noreferrer">
-                    Open
-                  </a>
-                  <button
-                    className="admin-btn"
-                    type="button"
-                    onClick={() =>
-                      adminFetch(`/api/admin/communities/${item.id}`, {
-                        method: "PATCH",
-                        body: JSON.stringify({ flagged: !item.flagged }),
-                      }).then(() => load())
-                    }
-                  >
-                    {item.flagged ? "Unflag" : "Flag"}
-                  </button>
-                </td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Tur</th>
+                <th>A’zolar</th>
+                <th>Manba</th>
+                <th>Belgi</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <strong>{item.title}</strong>
+                    <div className="admin-muted">@{item.username}</div>
+                  </td>
+                  <td>{item.type === "channel" ? "kanal" : "guruh"}</td>
+                  <td>{item.membersCount.toLocaleString("uz-UZ")}</td>
+                  <td>{item.source}</td>
+                  <td>
+                    {item.flagged ? "belgilangan" : "normal"} / {item.visibility}
+                  </td>
+                  <td>
+                    <div className="admin-actions-col">
+                      <a
+                        className="admin-btn"
+                        href={item.telegramUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ochish
+                      </a>
+                      <button
+                        className="admin-btn"
+                        type="button"
+                        onClick={() =>
+                          adminFetch(`/api/admin/communities/${item.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ flagged: !item.flagged }),
+                          }).then(() => load())
+                        }
+                      >
+                        {item.flagged ? "Belgini olish" : "Belgilash"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {toast.node}
     </AdminShell>

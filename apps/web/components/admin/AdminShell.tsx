@@ -6,16 +6,16 @@ import { ReactNode, useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
 
 const LINKS = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/helper", label: "Helper Control" },
-  { href: "/admin/queries", label: "Search Queries" },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/candidates", label: "Candidate Queue" },
-  { href: "/admin/communities", label: "Community Catalog" },
-  { href: "/admin/analytics", label: "Analytics" },
-  { href: "/admin/operations", label: "Operations" },
-  { href: "/admin/settings", label: "Settings" },
-  { href: "/admin/audit", label: "Audit Log" },
+  { href: "/admin", label: "Umumiy ko‘rinish" },
+  { href: "/admin/helper", label: "Helper boshqaruvi" },
+  { href: "/admin/queries", label: "Qidiruv so‘rovlari" },
+  { href: "/admin/categories", label: "Kategoriyalar" },
+  { href: "/admin/candidates", label: "Nomzodlar navbati" },
+  { href: "/admin/communities", label: "Hamjamiyatlar" },
+  { href: "/admin/analytics", label: "Analitika" },
+  { href: "/admin/operations", label: "Operatsiyalar" },
+  { href: "/admin/settings", label: "Sozlamalar" },
+  { href: "/admin/audit", label: "Audit jurnali" },
 ];
 
 export function AdminShell({
@@ -28,13 +28,14 @@ export function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
     adminFetch<{ authenticated: boolean; configured: boolean }>("/api/admin/session")
       .then((session) => {
         if (!session.configured) {
-          setToast("Admin auth is not configured on API");
+          setToast("API da admin autentifikatsiyasi sozlanmagan");
         }
         if (!session.authenticated) {
           router.replace("/admin/login");
@@ -45,6 +46,15 @@ export function AdminShell({
       .catch(() => router.replace("/admin/login"));
   }, [router]);
 
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.classList.toggle("admin-nav-lock", navOpen);
+    return () => document.body.classList.remove("admin-nav-lock");
+  }, [navOpen]);
+
   async function logout() {
     await adminFetch("/api/admin/logout", { method: "POST" });
     router.replace("/admin/login");
@@ -53,17 +63,26 @@ export function AdminShell({
   if (!ready) {
     return (
       <div className="admin-root">
-        <div className="admin-main admin-muted">Checking admin session…</div>
+        <div className="admin-main admin-muted">Sessiya tekshirilmoqda…</div>
       </div>
     );
   }
 
   return (
     <div className="admin-root">
-      <div className="admin-shell">
-        <aside className="admin-side">
-          <h1>UnderDog Admin</h1>
-          <nav className="admin-nav" aria-label="Admin">
+      <div className={`admin-shell${navOpen ? " nav-open" : ""}`}>
+        <button
+          className="admin-backdrop"
+          type="button"
+          aria-label="Menyuni yopish"
+          onClick={() => setNavOpen(false)}
+        />
+        <aside className="admin-side" id="admin-side-nav">
+          <p className="admin-side-brand">
+            UnderDog Admin
+            <span>Boshqaruv markazi</span>
+          </p>
+          <nav className="admin-nav" aria-label="Admin menyu">
             {LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -79,24 +98,38 @@ export function AdminShell({
               </Link>
             ))}
           </nav>
-          <div style={{ marginTop: 18 }}>
+          <div className="admin-side-actions">
+            <Link className="admin-btn" href="/">
+              Ommaviy sayt
+            </Link>
             <button className="admin-btn" type="button" onClick={logout}>
-              Log out
+              Chiqish
             </button>
           </div>
         </aside>
+
         <div className="admin-main">
-          <div className="admin-mobile-nav">
-            {LINKS.map((link) => (
-              <Link key={link.href} className="admin-btn" href={link.href}>
-                {link.label}
-              </Link>
-            ))}
-          </div>
+          <header className="admin-topbar">
+            <button
+              className="admin-btn icon"
+              type="button"
+              aria-expanded={navOpen}
+              aria-controls="admin-side-nav"
+              aria-label={navOpen ? "Menyuni yopish" : "Menyuni ochish"}
+              onClick={() => setNavOpen((open) => !open)}
+            >
+              {navOpen ? "✕" : "☰"}
+            </button>
+            <div className="admin-topbar-title">{title}</div>
+            <Link className="admin-btn ghost" href="/">
+              Sayt
+            </Link>
+          </header>
+
           <div className="admin-top">
             <h2>{title}</h2>
             <Link className="admin-btn" href="/">
-              Public site
+              Ommaviy sayt
             </Link>
           </div>
           {children}
@@ -119,4 +152,19 @@ export function useToast() {
     show: setMessage as (value: string) => void,
     node: message ? <div className="admin-toast">{message}</div> : null,
   };
+}
+
+export function helperStatusLabel(status: string) {
+  switch (status) {
+    case "running":
+      return "ishlamoqda";
+    case "paused":
+      return "pauzada";
+    case "degraded":
+      return "zaiflashgan";
+    case "unknown":
+      return "noma’lum";
+    default:
+      return status;
+  }
 }
