@@ -34,6 +34,7 @@ export {
 export {
   DEFAULT_SETTINGS,
   validateSettings,
+  turboDrainSettings,
   getSettings,
   saveSettings,
   isHelperPaused,

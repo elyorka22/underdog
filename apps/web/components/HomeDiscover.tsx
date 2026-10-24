@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Category, CommunityType } from "@/lib/api";
 import { getCategories } from "@/lib/api";
-import { CAT_ICONS, CAT_TAB_COLORS } from "@/lib/brand";
-import { SearchForm } from "@/components/SearchForm";
+import { BOT_URL, CAT_ICONS, CAT_TAB_COLORS } from "@/lib/brand";
 
 type HomeDiscoverProps = {
   categories: Category[];
@@ -19,21 +19,21 @@ const TYPE_META: Record<
 > = {
   channel: {
     title: "Kanallar",
-    meta: "Yangilik, kontent, e’lonlar",
+    meta: "Yangilik va e’lonlar",
     icon: "📣",
     tab: "#8FB7FF",
     label: "kanal",
   },
   group: {
     title: "Chatlar",
-    meta: "Suhbat, tanishuv, jamoa",
+    meta: "Suhbat va jamoalar",
     icon: "💬",
     tab: "#6BE3B0",
     label: "chat",
   },
   bot: {
     title: "Botlar",
-    meta: "Vosita, AI, o‘yin botlari",
+    meta: "AI va foydali vositalar",
     icon: "🤖",
     tab: "#FFD60A",
     label: "bot",
@@ -41,7 +41,9 @@ const TYPE_META: Record<
 };
 
 export function HomeDiscover({ categories }: HomeDiscoverProps) {
+  const router = useRouter();
   const [kind, setKind] = useState<Kind>(null);
+  const [query, setQuery] = useState("");
   const [visibleCategories, setVisibleCategories] = useState<Category[]>([]);
   const stepRef = useRef<HTMLElement | null>(null);
 
@@ -78,37 +80,140 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
     stepRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [kind]);
 
+  function goSearch(nextQuery = query) {
+    const params = new URLSearchParams();
+    if (nextQuery.trim()) params.set("q", nextQuery.trim());
+    if (kind) params.set("type", kind);
+    router.push(`/search${params.toString() ? `?${params}` : ""}`);
+  }
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    goSearch();
+  }
+
   const kindMeta = kind ? TYPE_META[kind] : null;
+  const placeholder = kind
+    ? `${kindMeta?.title} ichidan qidirish…`
+    : "Kanal, chat yoki bot nomi…";
 
   return (
-    <div className="ud-discover">
-      <SearchForm forcedType={kind || ""} showChips={!kind} />
+    <div className="ud-home">
+      <header className="ud-home__bar">
+        <Link
+          href="/favorites"
+          className="press ud-home__icon-btn"
+          aria-label="Sevimlilar"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+        <div className="ud-home__bar-right">
+          <Link
+            href="/categories"
+            className="press ud-home__icon-btn"
+            aria-label="Kategoriyalar"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M4 8h16v11H4V8Z"
+                stroke="currentColor"
+                strokeWidth="2.4"
+              />
+              <path d="M8 8V6h8v2" stroke="currentColor" strokeWidth="2.4" />
+              <path d="M12 8v11" stroke="currentColor" strokeWidth="2.4" />
+            </svg>
+          </Link>
+          <Link
+            href="/search"
+            className="press ud-home__icon-btn"
+            aria-label="Qidiruv"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" strokeWidth="2.4" />
+              <path d="M15.5 15.5 20 20" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+            </svg>
+          </Link>
+        </div>
+      </header>
+
+      <div className="ud-home__hero">
+        <p className="ud-home__brand">UnderDog</p>
+        <h1 className="ud-home__title">
+          Hozir qidiring.
+          <br />
+          Istalgan paytda toping.
+        </h1>
+      </div>
+
+      <form className="ud-home__search" onSubmit={onSubmit} role="search">
+        <label className="sr-only" htmlFor="ud-home-q">
+          Qidirish
+        </label>
+        <div className="ud-home__search-field">
+          <span className="ud-home__hash" aria-hidden>
+            #
+          </span>
+          <input
+            id="ud-home-q"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={placeholder}
+            autoComplete="off"
+          />
+        </div>
+        <button
+          className="press ud-home__add"
+          type="submit"
+          aria-label="Qidirish"
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </form>
 
       {!kind ? (
-        <section className="ud-discover__step" aria-labelledby="pick-type">
-          <div className="ud-section__head">
-            <h2 id="pick-type">Avval nimani qidiramiz?</h2>
-            <p>Birinchi qadam — kanal, chat yoki botni tanlang.</p>
-          </div>
-          <div className="ud-type-grid">
+        <section className="ud-home__section" aria-labelledby="home-types">
+          <h2 id="home-types" className="ud-home__section-title">
+            Nimani qidiramiz?
+          </h2>
+          <div className="ud-home__folders">
             {(Object.keys(TYPE_META) as CommunityType[]).map((id) => {
               const item = TYPE_META[id];
               return (
                 <button
                   key={id}
                   type="button"
-                  className="press ud-folder ud-folder--type"
+                  className="press ud-home-folder"
                   onClick={() => setKind(id)}
                 >
                   <span
-                    className="ud-folder__tab"
+                    className="ud-home-folder__tab"
                     style={{ background: item.tab }}
                   />
-                  <span className="ud-folder__icon" aria-hidden>
-                    {item.icon}
-                  </span>
-                  <strong className="ud-folder__title">{item.title}</strong>
-                  <span className="ud-folder__meta">{item.meta}</span>
+                  <div className="ud-home-folder__top">
+                    <span
+                      className="ud-home-folder__icon"
+                      style={{ background: item.tab }}
+                      aria-hidden
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="ud-home-folder__count">{item.meta}</span>
+                  </div>
+                  <strong className="ud-home-folder__title">{item.title}</strong>
                 </button>
               );
             })}
@@ -117,57 +222,64 @@ export function HomeDiscover({ categories }: HomeDiscoverProps) {
       ) : (
         <section
           ref={stepRef}
-          className="ud-discover__step"
-          aria-labelledby="pick-cat"
+          className="ud-home__section"
+          aria-labelledby="home-cats"
         >
-          <div className="ud-section__head ud-section__head--row">
-            <div>
-              <h2 id="pick-cat">Endi kategoriyani tanlang</h2>
-              <p>{kindMeta?.title} uchun mos mavzular.</p>
-            </div>
+          <div className="ud-home__section-head">
+            <h2 id="home-cats" className="ud-home__section-title">
+              {kindMeta?.title}
+            </h2>
             <button
               type="button"
-              className="press ud-btn ud-btn--white shadow-sm"
+              className="press ud-home__back"
               onClick={() => setKind(null)}
             >
               ← Orqaga
             </button>
           </div>
-
-          <div className="ud-folder-grid">
-            {visibleCategories.map((category, index) => (
-              <Link
-                key={category.id}
-                href={`/search?type=${kind}&category=${category.id}`}
-                className="press ud-folder"
-              >
-                <span
-                  className="ud-folder__tab"
-                  style={{
-                    background: CAT_TAB_COLORS[index % CAT_TAB_COLORS.length],
-                  }}
-                />
-                <div className="ud-folder__top">
+          <div className="ud-home__folders ud-home__folders--cats">
+            {visibleCategories.map((category, index) => {
+              const tab = CAT_TAB_COLORS[index % CAT_TAB_COLORS.length];
+              return (
+                <Link
+                  key={category.id}
+                  href={`/search?type=${kind}&category=${category.id}`}
+                  className="press ud-home-folder"
+                >
                   <span
-                    className="ud-folder__icon-box"
-                    style={{
-                      background: CAT_TAB_COLORS[index % CAT_TAB_COLORS.length],
-                    }}
-                    aria-hidden
-                  >
-                    {CAT_ICONS[category.id] || "📁"}
-                  </span>
-                  <span className="ud-folder__meta">
-                    {category.count} ta {kindMeta?.label}
-                  </span>
-                </div>
-                <strong className="ud-folder__title">{category.title}</strong>
-                <span className="ud-folder__desc">{category.description}</span>
-              </Link>
-            ))}
+                    className="ud-home-folder__tab"
+                    style={{ background: tab }}
+                  />
+                  <div className="ud-home-folder__top">
+                    <span
+                      className="ud-home-folder__icon"
+                      style={{ background: tab }}
+                      aria-hidden
+                    >
+                      {CAT_ICONS[category.id] || "📁"}
+                    </span>
+                    <span className="ud-home-folder__count">
+                      {category.count} {kindMeta?.label}
+                    </span>
+                  </div>
+                  <strong className="ud-home-folder__title">
+                    {category.title}
+                  </strong>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
+
+      <a
+        className="press ud-home__bot"
+        href={BOT_URL}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Telegram botda ochish
+      </a>
     </div>
   );
 }

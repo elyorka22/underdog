@@ -5,9 +5,11 @@ export const DEFAULT_SETTINGS = {
   batchSize: 8,
   intervalMs: 60000,
   delayMs: 2000,
+  concurrency: 3,
   discoverEvery: 1,
   queriesPerTick: 2,
   maxPendingQueue: 5000,
+  drainPendingThreshold: 150,
   defaultLanguage: "uz",
   defaultCategoryId: "tech",
   duplicateHandling: "skip",
@@ -15,12 +17,14 @@ export const DEFAULT_SETTINGS = {
 };
 
 const BOUNDS = {
-  batchSize: [1, 50],
-  intervalMs: [10000, 3600000],
-  delayMs: [500, 60000],
+  batchSize: [1, 100],
+  intervalMs: [5000, 3600000],
+  delayMs: [100, 60000],
+  concurrency: [1, 8],
   discoverEvery: [1, 100],
   queriesPerTick: [1, 10],
   maxPendingQueue: [100, 100000],
+  drainPendingThreshold: [20, 10000],
 };
 
 /**
@@ -43,6 +47,22 @@ export function validateSettings(input) {
     ? String(next.duplicateHandling)
     : "skip";
   return next;
+}
+
+/** Preset to clear a large pending queue faster. */
+export function turboDrainSettings(current = {}) {
+  return validateSettings({
+    ...DEFAULT_SETTINGS,
+    ...current,
+    autoDiscovery: false,
+    batchSize: 40,
+    concurrency: 5,
+    delayMs: 250,
+    intervalMs: 8000,
+    discoverEvery: 20,
+    queriesPerTick: 1,
+    drainPendingThreshold: 80,
+  });
 }
 
 export async function getSettings() {

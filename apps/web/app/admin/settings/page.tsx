@@ -9,9 +9,11 @@ type Settings = {
   batchSize: number;
   intervalMs: number;
   delayMs: number;
+  concurrency: number;
   discoverEvery: number;
   queriesPerTick: number;
   maxPendingQueue: number;
+  drainPendingThreshold: number;
   defaultLanguage: string;
   defaultCategoryId: string;
   duplicateHandling: string;
@@ -23,9 +25,11 @@ const DEFAULTS: Settings = {
   batchSize: 8,
   intervalMs: 60000,
   delayMs: 2000,
+  concurrency: 3,
   discoverEvery: 1,
   queriesPerTick: 2,
   maxPendingQueue: 5000,
+  drainPendingThreshold: 150,
   defaultLanguage: "uz",
   defaultCategoryId: "tech",
   duplicateHandling: "skip",
@@ -41,8 +45,8 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     adminFetch<Settings>("/api/admin/settings")
       .then((data) => {
-        setSettings(data);
-        setBaseline(data);
+        setSettings({ ...DEFAULTS, ...data });
+        setBaseline({ ...DEFAULTS, ...data });
       })
       .catch((err) => toast.show(err.message));
   }, []);
@@ -54,22 +58,46 @@ export default function AdminSettingsPage() {
         method: "PUT",
         body: JSON.stringify(settings),
       });
-      setSettings(saved);
-      setBaseline(saved);
+      setSettings({ ...DEFAULTS, ...saved });
+      setBaseline({ ...DEFAULTS, ...saved });
       toast.show("Saqlandi — helper keyingi siklda qo‘llaydi");
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Saqlash xatosi");
     }
   }
 
+  function applyFastQueue() {
+    setSettings((prev) => ({
+      ...prev,
+      autoDiscovery: false,
+      batchSize: 40,
+      concurrency: 5,
+      delayMs: 250,
+      intervalMs: 8000,
+      discoverEvery: 20,
+      queriesPerTick: 1,
+      drainPendingThreshold: 80,
+    }));
+  }
+
   return (
     <AdminShell title="Sozlamalar">
       <form className="admin-panel" onSubmit={onSave}>
         <p className="admin-muted">
-          Bu sozlamalar PostgreSQL da saqlanadi va helper har bir siklda
-          o‘qiydi. Maxfiy kalitlar (Telegram session, token, DB parol) faqat
-          server muhitida qoladi va bu yerda ko‘rinmaydi.
+          Navbat katta bo‘lsa: paketni oshiring, kechikishni kamaytiring,
+          parallel sonini ko‘tarining yoki «Tez tozalash» presetini bosing.
+          Helper har siklda DB dan o‘qiydi.
         </p>
+
+        <div className="admin-row" style={{ marginBottom: 12 }}>
+          <button
+            className="admin-btn"
+            type="button"
+            onClick={() => applyFastQueue()}
+          >
+            Tez tozalash (preset)
+          </button>
+        </div>
 
         <div className="admin-grid">
           <label className="admin-card">
@@ -83,13 +111,31 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="admin-card">
-            <div className="label">Paket hajmi (1–50)</div>
+            <div className="label">Paket hajmi (1–100)</div>
             <input
               className="admin-input"
               type="number"
+              min={1}
+              max={100}
               value={settings.batchSize}
               onChange={(e) =>
                 setSettings({ ...settings, batchSize: Number(e.target.value) })
+              }
+            />
+          </label>
+          <label className="admin-card">
+            <div className="label">Parallel (1–8)</div>
+            <input
+              className="admin-input"
+              type="number"
+              min={1}
+              max={8}
+              value={settings.concurrency}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  concurrency: Number(e.target.value),
+                })
               }
             />
           </label>
@@ -112,6 +158,20 @@ export default function AdminSettingsPage() {
               value={settings.delayMs}
               onChange={(e) =>
                 setSettings({ ...settings, delayMs: Number(e.target.value) })
+              }
+            />
+          </label>
+          <label className="admin-card">
+            <div className="label">Drain chegarasi (pending ≥)</div>
+            <input
+              className="admin-input"
+              type="number"
+              value={settings.drainPendingThreshold}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  drainPendingThreshold: Number(e.target.value),
+                })
               }
             />
           </label>
@@ -180,13 +240,11 @@ export default function AdminSettingsPage() {
           <button
             className="admin-btn"
             type="button"
-            onClick={() => setSettings(DEFAULTS)}
+            onClick={() => setSettings(baseline)}
+            disabled={!dirty}
           >
-            Standartga qaytarish
+            Bekor qilish
           </button>
-          {dirty ? (
-            <span className="admin-warn">Saqlanmagan o‘zgarishlar bor</span>
-          ) : null}
         </div>
       </form>
       {toast.node}

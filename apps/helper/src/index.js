@@ -30,16 +30,40 @@ const envFallback = {
   batchSize: Number(process.env.HELPER_BATCH_SIZE || 8),
   intervalMs: Number(process.env.HELPER_INTERVAL_MS || 60000),
   delayMs: Number(process.env.HELPER_DELAY_MS || 2000),
+  concurrency: Number(process.env.HELPER_CONCURRENCY || 3),
   discoverEvery: Number(process.env.HELPER_DISCOVER_EVERY || 1),
   queriesPerTick: Number(process.env.HELPER_QUERIES_PER_TICK || 2),
   autoDiscovery: process.env.HELPER_AUTO_DISCOVERY !== "0",
   maxPendingQueue: Number(process.env.HELPER_MAX_PENDING || 5000),
+  drainPendingThreshold: Number(process.env.HELPER_DRAIN_THRESHOLD || 150),
 };
 
 let tick = 0;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Run async work over items with limited parallelism.
+ * @template T
+ * @param {T[]} items
+ * @param {number} concurrency
+ * @param {(item: T, index: number) => Promise<void>} worker
+ */
+async function mapPool(items, concurrency, worker) {
+  const limit = Math.max(1, Math.min(concurrency || 1, items.length || 1));
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      await worker(items[index], index);
+    }
+  }
+
+  await Promise.all(Array.from({ length: limit }, () => runWorker()));
 }
 
 function guessCategory(description, hint) {
@@ -122,16 +146,79 @@ async function loadRuntimeSettings() {
       delayMs: dbSettings.delayMs || envFallback.delayMs,
       discoverEvery: dbSettings.discoverEvery || envFallback.discoverEvery,
       queriesPerTick: dbSettings.queriesPerTick || envFallback.queriesPerTick,
+      concurrency: dbSettings.concurrency || envFallback.concurrency,
       autoDiscovery:
         dbSettings.autoDiscovery != null
           ? dbSettings.autoDiscovery
           : envFallback.autoDiscovery,
       maxPendingQueue:
         dbSettings.maxPendingQueue || envFallback.maxPendingQueue,
+      drainPendingThreshold:
+        dbSettings.drainPendingThreshold || envFallback.drainPendingThreshold,
     };
   } catch {
     return { ...envFallback };
   }
+}
+
+/**
+ * @param {object} candidate
+ * @param {{ focusActive: boolean, focus: object|null, draining: boolean }} ctx
+ */
+async function processOneCandidate(candidate, ctx) {
+  const resolved = await resolvePublicChat(candidate.username);
+  if (!resolved) {
+    await finishCandidate(candidate.id, "failed", "not found or private");
+    return { ok: false };
+  }
+  if (resolved.skipped) {
+    await finishCandidate(candidate.id, "skipped", resolved.reason);
+    return { ok: false };
+  }
+
+  let language = null;
+  if (candidate.query_id) {
+    const dq = await getDiscoveryQuery(Number(candidate.query_id));
+    language = dq?.language || null;
+  }
+  if (!language) {
+    language = detectLanguage(
+      `${resolved.title || ""} ${resolved.description || ""}`,
+    );
+  }
+
+  const categoryId = guessCategory(
+    resolved.description,
+    candidate.category_hint ||
+      (ctx.focusActive ? ctx.focus?.categoryId : null),
+  );
+
+  await upsertCommunity({
+    username: resolved.username,
+    title: resolved.title,
+    description: resolved.description,
+    type: resolved.type,
+    categoryId,
+    language,
+    membersCount: resolved.membersCount,
+    tags: [],
+    verified: resolved.verified,
+    telegramId: resolved.telegramId,
+    status: "active",
+    source: resolved.source,
+    discoveryQueryId: candidate.query_id || null,
+  });
+
+  // While draining a backlog, skip mention fan-out (it grows the queue again).
+  if (!ctx.draining) {
+    const mentions = extractUsernames(resolved.description);
+    if (mentions.length) {
+      await enqueueMany(mentions, { source: "mention" });
+    }
+  }
+
+  await finishCandidate(candidate.id, "done");
+  return { ok: true };
 }
 
 async function processBatch(settings, force = {}) {
@@ -146,9 +233,21 @@ async function processBatch(settings, force = {}) {
 
   const focus = force.focus || (await getHelperFocus());
   const focusActive = Boolean(focus?.categoryId);
+  const pendingBefore = Number(force.pendingCount || 0);
+  const drainThreshold = Math.max(
+    Number(settings.drainPendingThreshold || 150),
+    20,
+  );
+  const draining =
+    Boolean(force.draining) ||
+    (!focusActive &&
+      !force.discover &&
+      !force.queryId &&
+      pendingBefore >= drainThreshold);
 
   const shouldDiscover =
     hasMtprotoConfig() &&
+    !draining &&
     (focusActive ||
       (settings.autoDiscovery &&
         (force.discover ||
@@ -159,7 +258,7 @@ async function processBatch(settings, force = {}) {
   if (shouldDiscover) {
     const discovery = await runGlobalDiscovery({
       queriesPerTick: force.queryId ? 1 : settings.queriesPerTick,
-      delayMs: Math.max(settings.delayMs, 1500),
+      delayMs: Math.max(settings.delayMs, 800),
       queryId: force.queryId,
       focusCategoryId: focusActive ? focus.categoryId : undefined,
       focusType: focusActive ? focus.type || "all" : "all",
@@ -176,73 +275,46 @@ async function processBatch(settings, force = {}) {
       focus: discovery.focus,
     });
     console.log("Global discovery", discovery);
+  } else if (draining) {
+    notes += `drain:pending=${pendingBefore}; `;
   }
 
-  const candidates = await claimCandidates(settings.batchSize);
+  const batchSize = draining
+    ? Math.max(settings.batchSize, 20)
+    : settings.batchSize;
+  const concurrency = draining
+    ? Math.max(settings.concurrency || 3, 4)
+    : Math.max(settings.concurrency || 1, 1);
+  const itemDelay = draining
+    ? Math.min(settings.delayMs, 300)
+    : settings.delayMs;
+
+  const candidates = await claimCandidates(batchSize);
   if (!candidates.length && !force.processQueue) {
-    const fromMentions = await discoverFromDescriptions(40);
+    const fromMentions = draining ? 0 : await discoverFromDescriptions(40);
     discovered += fromMentions;
-    notes += `queue empty; mentions +${fromMentions}`;
+    notes += draining
+      ? "queue empty while draining"
+      : `queue empty; mentions +${fromMentions}`;
     await finishHelperRun(runId, {
       processed: 0,
       succeeded: 0,
       failed: 0,
       notes,
     });
-    return { processed, succeeded, failed, discovered };
+    return { processed, succeeded, failed, discovered, draining };
   }
 
-  for (const candidate of candidates) {
+  await mapPool(candidates, concurrency, async (candidate) => {
     processed += 1;
     try {
-      const resolved = await resolvePublicChat(candidate.username);
-      if (!resolved) {
-        failed += 1;
-        await finishCandidate(candidate.id, "failed", "not found or private");
-      } else if (resolved.skipped) {
-        failed += 1;
-        await finishCandidate(candidate.id, "skipped", resolved.reason);
-      } else {
-        let language = null;
-        if (candidate.query_id) {
-          const dq = await getDiscoveryQuery(Number(candidate.query_id));
-          language = dq?.language || null;
-        }
-        if (!language) {
-          language = detectLanguage(
-            `${resolved.title || ""} ${resolved.description || ""}`,
-          );
-        }
-
-        const categoryId = guessCategory(
-          resolved.description,
-          candidate.category_hint || (focusActive ? focus.categoryId : null),
-        );
-
-        await upsertCommunity({
-          username: resolved.username,
-          title: resolved.title,
-          description: resolved.description,
-          type: resolved.type,
-          categoryId,
-          language,
-          membersCount: resolved.membersCount,
-          tags: [],
-          verified: resolved.verified,
-          telegramId: resolved.telegramId,
-          status: "active",
-          source: resolved.source,
-          discoveryQueryId: candidate.query_id || null,
-        });
-
-        const mentions = extractUsernames(resolved.description);
-        if (mentions.length) {
-          await enqueueMany(mentions, { source: "mention" });
-        }
-
-        succeeded += 1;
-        await finishCandidate(candidate.id, "done");
-      }
+      const result = await processOneCandidate(candidate, {
+        focusActive,
+        focus,
+        draining,
+      });
+      if (result.ok) succeeded += 1;
+      else failed += 1;
     } catch (error) {
       failed += 1;
       await finishCandidate(
@@ -251,19 +323,20 @@ async function processBatch(settings, force = {}) {
         error instanceof Error ? error.message : String(error),
       );
     }
+    if (itemDelay > 0) await sleep(itemDelay);
+  });
 
-    await sleep(settings.delayMs);
-  }
-
-  notes += `processed ${processed}`;
+  notes += `processed ${processed} x${concurrency}`;
   await finishHelperRun(runId, { processed, succeeded, failed, notes });
   await writeHelperEvent("process_batch", {
     processed,
     succeeded,
     failed,
     discovered,
+    concurrency,
+    draining,
   });
-  return { processed, succeeded, failed, discovered };
+  return { processed, succeeded, failed, discovered, draining };
 }
 
 async function bootstrap() {
@@ -329,15 +402,35 @@ async function loop() {
     }
 
     const stats = await getCandidateStats();
-    if (stats.pending > settings.maxPendingQueue && !command && !focus) {
-      console.warn(
-        `Pending queue ${stats.pending} exceeds max ${settings.maxPendingQueue}; skipping auto-discovery this tick`,
-      );
+    const drainThreshold = Math.max(settings.drainPendingThreshold || 150, 20);
+    const draining =
+      !focus &&
+      !command?.startsWith?.("discover") &&
+      stats.pending >= drainThreshold;
+
+    if (
+      (stats.pending > settings.maxPendingQueue || draining) &&
+      !command &&
+      !focus
+    ) {
+      if (stats.pending > settings.maxPendingQueue) {
+        console.warn(
+          `Pending queue ${stats.pending} exceeds max ${settings.maxPendingQueue}; skipping auto-discovery this tick`,
+        );
+      } else {
+        console.log(
+          `Drain mode: pending=${stats.pending} >= ${drainThreshold}; focusing on queue`,
+        );
+      }
       settings.autoDiscovery = false;
     }
 
-    /** @type {{ discover?: boolean, processQueue?: boolean, queryId?: number, focus?: object }} */
-    const force = { focus: focus || undefined };
+    /** @type {{ discover?: boolean, processQueue?: boolean, queryId?: number, focus?: object, pendingCount?: number, draining?: boolean }} */
+    const force = {
+      focus: focus || undefined,
+      pendingCount: stats.pending,
+      draining,
+    };
     if (command === "discover") force.discover = true;
     if (command === "process_queue") force.processQueue = true;
     if (command && String(command).startsWith("discover_query:")) {
@@ -354,7 +447,10 @@ async function loop() {
     const result = await processBatch(settings, force);
     console.log("Helper tick", result, await getCandidateStats());
     if (once) break;
-    await sleep(settings.intervalMs);
+    const nextSleep = result.draining
+      ? Math.min(settings.intervalMs, 10000)
+      : settings.intervalMs;
+    await sleep(nextSleep);
   } while (true);
 
   await disconnectMtproto();

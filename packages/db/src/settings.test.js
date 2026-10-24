@@ -14,12 +14,15 @@ describe("admin settings validation", () => {
       batchSize: 12,
       intervalMs: 30000,
       delayMs: 1500,
+      concurrency: 4,
       discoverEvery: 2,
       queriesPerTick: 3,
       maxPendingQueue: 1000,
+      drainPendingThreshold: 200,
       autoDiscovery: false,
     });
     assert.equal(next.batchSize, 12);
+    assert.equal(next.concurrency, 4);
     assert.equal(next.autoDiscovery, false);
   });
 
@@ -29,5 +32,17 @@ describe("admin settings validation", () => {
 
   it("rejects invalid interval", () => {
     assert.throws(() => validateSettings({ intervalMs: 100 }), /intervalMs/);
+  });
+
+  it("accepts turbo-like batch and delay", () => {
+    const next = validateSettings({
+      batchSize: 40,
+      delayMs: 250,
+      concurrency: 5,
+      intervalMs: 8000,
+    });
+    assert.equal(next.batchSize, 40);
+    assert.equal(next.delayMs, 250);
+    assert.equal(next.concurrency, 5);
   });
 });

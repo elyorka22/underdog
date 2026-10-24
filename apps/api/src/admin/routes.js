@@ -24,6 +24,7 @@ import {
   retryCandidates,
   saveSettings,
   getSettings,
+  turboDrainSettings,
   setHelperCommand,
   setHelperFocus,
   setHelperPaused,
@@ -161,6 +162,35 @@ export function createAdminRouter() {
       ok: true,
       message: "Queue processing requested. Helper will pick it up on next tick.",
     });
+  });
+
+  router.post("/helper/turbo-drain", async (req, res) => {
+    try {
+      const current = await getSettings();
+      const next = await saveSettings(turboDrainSettings(current));
+      await setHelperCommand("process_queue");
+      await writeAudit({
+        action: "helper_turbo_drain",
+        entity: "helper",
+        meta: {
+          batchSize: next.batchSize,
+          concurrency: next.concurrency,
+          delayMs: next.delayMs,
+          intervalMs: next.intervalMs,
+        },
+        ip: req.ip || "",
+      });
+      res.json({
+        ok: true,
+        settings: next,
+        message:
+          "Turbo drain yoqildi: katta paket, parallel ishlov, avto-qidiruv o‘chirildi. Helper keyingi siklda tezroq navbatni tozalaydi.",
+      });
+    } catch (error) {
+      res.status(400).json({
+        error: error instanceof Error ? error.message : "Turbo failed",
+      });
+    }
   });
 
   router.get("/helper/focus", async (_req, res) => {

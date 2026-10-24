@@ -341,13 +341,26 @@ export default function AdminHelperPage() {
               >
                 Navbatni qayta ishlash
               </button>
+              <button
+                className="admin-btn primary"
+                type="button"
+                onClick={() =>
+                  action(
+                    "/api/admin/helper/turbo-drain",
+                    "Turbo drain yoqildi",
+                  )
+                }
+              >
+                Navbatni tezlashtirish
+              </button>
               <button className="admin-btn" type="button" onClick={() => load()}>
                 Yangilash
               </button>
             </div>
             <p className="admin-muted" style={{ marginBottom: 0, marginTop: 12 }}>
-              Pauza va sozlamalar ma’lumotlar bazasi orqali qo‘llanadi. Helper
-              keyingi siklda o‘qiydi — Docker qayta build qilish shart emas.
+              «Navbatni tezlashtirish» — avto-qidiruvni o‘chiradi, paket/parallelni
+              oshiradi. Pending ≥ drain limity bo‘lsa helper o‘zi drain rejimiga
+              o‘tadi. Helperni qayta deploy qiling (yangi kod uchun).
             </p>
           </div>
 

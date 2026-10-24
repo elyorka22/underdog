@@ -8,16 +8,17 @@ import { SiteHeader } from "@/components/SiteHeader";
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
+  const isHome = pathname === "/";
 
   if (isAdmin) {
     return <>{children}</>;
   }
 
   return (
-    <div id="top">
-      <SiteHeader />
+    <div id="top" className={isHome ? "ud-chrome--home" : undefined}>
+      {isHome ? null : <SiteHeader />}
       <main>{children}</main>
-      <SiteFooter />
+      {isHome ? null : <SiteFooter />}
     </div>
   );
 }
