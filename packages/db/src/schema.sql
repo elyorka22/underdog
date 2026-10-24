@@ -36,6 +36,9 @@ CREATE INDEX IF NOT EXISTS idx_communities_type
 CREATE INDEX IF NOT EXISTS idx_communities_username_lower
   ON communities (LOWER(username));
 
+CREATE INDEX IF NOT EXISTS idx_communities_language
+  ON communities (language);
+
 CREATE TABLE IF NOT EXISTS candidates (
   id BIGSERIAL PRIMARY KEY,
   username TEXT NOT NULL,

@@ -78,6 +78,7 @@ export function searchCommunities(params: {
   q?: string;
   type?: string;
   category?: string;
+  language?: string;
   sort?: string;
   limit?: number;
   offset?: number;
@@ -86,6 +87,7 @@ export function searchCommunities(params: {
   if (params.q) query.set("q", params.q);
   if (params.type) query.set("type", params.type);
   if (params.category) query.set("category", params.category);
+  if (params.language) query.set("language", params.language);
   if (params.sort) query.set("sort", params.sort);
   if (params.limit) query.set("limit", String(params.limit));
   if (params.offset) query.set("offset", String(params.offset));

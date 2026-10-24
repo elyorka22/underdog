@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FavoriteActions } from "@/components/FavoriteActions";
 import { formatMembers, getCommunity } from "@/lib/api";
+import { languageLabel } from "@/lib/languages";
 
 type CommunityPageProps = {
   params: Promise<{ id: string }>;
@@ -35,6 +37,7 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
           <span className="ud-badge">
             {item.type === "channel" ? "Kanal" : "Guruh"}
           </span>{" "}
+          <span className="ud-badge">{languageLabel(item.language)}</span>{" "}
           <span className="ud-badge">{item.categoryTitle}</span>
         </p>
         <h1>{item.title}</h1>
@@ -57,11 +60,12 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
           >
             Telegramda ochish
           </a>
+          <FavoriteActions item={item} />
           <Link
             className="press ud-btn ud-btn--white shadow-sm"
-            href={`/search?category=${item.categoryId}`}
+            href={`/search?type=${item.type}&language=${item.language}&category=${item.categoryId}`}
           >
-            Shu kategoriyada
+            Shu til va kategoriya
           </Link>
           <Link className="press ud-btn ud-btn--yellow shadow-sm" href="/search">
             Qidiruvga qaytish

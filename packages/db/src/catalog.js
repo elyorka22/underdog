@@ -6,6 +6,7 @@ import { mapCategory, mapCommunity } from "./mappers.js";
  * @property {string} [q]
  * @property {'channel' | 'group' | 'all'} [type]
  * @property {string} [category]
+ * @property {string} [language]
  * @property {string} [sort]
  * @property {number} [limit]
  * @property {number} [offset]
@@ -18,6 +19,7 @@ export async function searchCommunities(params = {}) {
   const q = (params.q || "").trim();
   const type = params.type || "all";
   const category = params.category || "all";
+  const language = params.language || "all";
   const sort = params.sort || "members";
   const limit = Math.min(Math.max(Number(params.limit) || 20, 1), 50);
   const offset = Math.max(Number(params.offset) || 0, 0);
@@ -32,6 +34,10 @@ export async function searchCommunities(params = {}) {
   if (category !== "all") {
     values.push(category);
     where.push(`c.category_id = $${values.length}`);
+  }
+  if (language !== "all") {
+    values.push(language);
+    where.push(`c.language = $${values.length}`);
   }
   if (q) {
     values.push(`%${q.toLowerCase()}%`);
@@ -150,7 +156,7 @@ export async function upsertCommunity(item) {
       members_count, tags, verified, telegram_id, status, source,
       discovery_query_id, last_checked_at, updated_at
     ) VALUES (
-      $1, $2, $3, $4, $5, $6, $7,
+      $1, $2, $3, $4, $5, $6, COALESCE($7, 'uz'),
       $8, $9, $10, $11, $12, $13,
       $14, NOW(), NOW()
     )
@@ -159,7 +165,7 @@ export async function upsertCommunity(item) {
       description = COALESCE(NULLIF(EXCLUDED.description, ''), communities.description),
       type = EXCLUDED.type,
       category_id = COALESCE(EXCLUDED.category_id, communities.category_id),
-      language = COALESCE(EXCLUDED.language, communities.language),
+      language = COALESCE($7, communities.language),
       members_count = GREATEST(EXCLUDED.members_count, communities.members_count),
       tags = CASE
         WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
@@ -183,7 +189,7 @@ export async function upsertCommunity(item) {
       item.description || "",
       item.type,
       item.categoryId || null,
-      item.language || "uz",
+      item.language || null,
       Number(item.membersCount || 0),
       item.tags || [],
       Boolean(item.verified),

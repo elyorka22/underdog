@@ -6,6 +6,7 @@ import { communities } from "./seed.js";
  * @property {string} [q]
  * @property {'channel' | 'group' | 'all'} [type]
  * @property {string} [category]
+ * @property {string} [language]
  * @property {string} [sort]
  * @property {number} [limit]
  * @property {number} [offset]
@@ -42,6 +43,7 @@ export function searchCommunities(params = {}) {
   const q = normalize(params.q || "");
   const type = params.type || "all";
   const category = params.category || "all";
+  const language = params.language || "all";
   const sort = params.sort || "members";
   const limit = Math.min(Math.max(Number(params.limit) || 20, 1), 50);
   const offset = Math.max(Number(params.offset) || 0, 0);
@@ -49,6 +51,7 @@ export function searchCommunities(params = {}) {
   let items = communities.filter((item) => {
     if (type !== "all" && item.type !== type) return false;
     if (category !== "all" && item.categoryId !== category) return false;
+    if (language !== "all" && item.language !== language) return false;
     return matchesQuery(item, q);
   });
 

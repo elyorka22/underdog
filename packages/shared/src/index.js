@@ -8,3 +8,8 @@ export {
   listPopular,
   getStats,
 } from "./search.js";
+export {
+  LANGUAGES,
+  languageLabel,
+  detectLanguage,
+} from "./language.js";

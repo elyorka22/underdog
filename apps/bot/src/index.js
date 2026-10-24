@@ -105,7 +105,7 @@ function escapeMarkdown(text) {
 
 /**
  * @param {import('./i18n.js').Lang} lang
- * @param {{ title: string, username: string, type: string, categoryId?: string, categoryTitle?: string, membersCount: number, description: string, telegramUrl?: string, tags?: string[] }} item
+ * @param {{ title: string, username: string, type: string, language?: string, categoryId?: string, categoryTitle?: string, membersCount: number, description: string, telegramUrl?: string, tags?: string[] }} item
  */
 function formatCommunityDetail(lang, item) {
   const typeLabel =
@@ -117,10 +117,11 @@ function formatCommunityDetail(lang, item) {
     item.categoryId != null
       ? categoryTitle(item.categoryId, lang)
       : item.categoryTitle || "";
+  const langCode = String(item.language || "uz").toUpperCase();
   const tags = (item.tags || []).map((tag) => `#${tag}`).join(" ");
   return [
     `*${escapeMarkdown(item.title)}*`,
-    `@${escapeMarkdown(item.username)} · ${typeLabel} · ${escapeMarkdown(cat)}`,
+    `@${escapeMarkdown(item.username)} · ${typeLabel} · ${langCode} · ${escapeMarkdown(cat)}`,
     `${members} ${t(lang, "members")}`,
     "",
     escapeMarkdown(item.description),
@@ -167,7 +168,7 @@ function fetchPage(params) {
 
 /**
  * @param {import('./i18n.js').Lang} lang
- * @param {{ label: string, items: Array<{ title: string, type: string }>, total: number, page: number }} data
+ * @param {{ label: string, items: Array<{ title: string, type: string, language?: string }>, total: number, page: number }} data
  */
 function formatResultsList(lang, data) {
   if (!data.items.length) {
@@ -184,7 +185,8 @@ function formatResultsList(lang, data) {
 
   data.items.forEach((item, index) => {
     const typeMark = item.type === "channel" ? "📢" : "💬";
-    lines.push(`${index + 1}. ${typeMark} ${item.title}`);
+    const langMark = String(item.language || "uz").toUpperCase();
+    lines.push(`${index + 1}. ${typeMark} [${langMark}] ${item.title}`);
   });
 
   lines.push("", t(lang, "pick_hint"));

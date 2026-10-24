@@ -2,12 +2,14 @@ import { Suspense } from "react";
 import { CommunityList } from "@/components/CommunityList";
 import { SearchFilters } from "@/components/SearchFilters";
 import { getCategories, searchCommunities } from "@/lib/api";
+import { languageLabel } from "@/lib/languages";
 
 type SearchPageProps = {
   searchParams: Promise<{
     q?: string;
     type?: string;
     category?: string;
+    language?: string;
     sort?: string;
   }>;
 };
@@ -23,6 +25,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       q: params.q,
       type: params.type,
       category: params.category,
+      language: params.language,
       sort: params.sort,
       limit: 30,
     }),
@@ -35,30 +38,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       : params.type === "group"
         ? "Guruhlar"
         : "Barcha turlar";
+  const langLabel =
+    params.language && params.language !== "all"
+      ? languageLabel(params.language)
+      : "Barcha tillar";
 
   return (
-    <section className="shell ud-page">
+    <section className="shell ud-page ud-page--search">
       <div className="ud-stamp ud-stamp--yellow">QIDIRUV</div>
-      <h2
-        style={{
-          margin: 0,
-          fontFamily: "var(--font-display)",
-          fontSize: "clamp(32px, 5vw, 56px)",
-          lineHeight: 1.05,
-        }}
-      >
-        Natijalar
-      </h2>
-      <p style={{ margin: 0, color: "var(--muted)", fontSize: 18 }}>
-        Avval kanal yoki guruhni tanlang, keyin kategoriyani belgilang.
+      <h2 className="ud-search-title">Natijalar</h2>
+      <p className="ud-search-lead">
+        Ro‘yxatdan nomni bosing — batafsil ma’lumot va Telegram havolasi ochiladi.
       </p>
 
       <Suspense fallback={<div className="ud-filters">Yuklanmoqda…</div>}>
         <SearchFilters categories={categories.items} />
       </Suspense>
 
-      <p style={{ margin: 0, fontWeight: 700 }}>
-        Topildi: {result.total} · {typeLabel}
+      <p className="ud-search-count">
+        Topildi: {result.total} · {typeLabel} · {langLabel}
         {params.q ? ` — «${params.q}»` : ""}
       </p>
 

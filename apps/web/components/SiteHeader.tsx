@@ -15,6 +15,7 @@ export function SiteHeader() {
         <nav className="ud-nav" aria-label="Asosiy navigatsiya">
           <Link href="/categories">Kategoriyalar</Link>
           <Link href="/search">Qidiruv</Link>
+          <Link href="/favorites">Sevimlilar</Link>
           <Link href="/#qanday">Qanday ishlaydi</Link>
           <a className="press ud-nav__cta" href={BOT_URL} target="_blank" rel="noreferrer">
             Telegram bot

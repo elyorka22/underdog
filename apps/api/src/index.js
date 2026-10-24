@@ -80,6 +80,8 @@ app.get("/api/search", async (req, res) => {
     type: typeof req.query.type === "string" ? req.query.type : "all",
     category:
       typeof req.query.category === "string" ? req.query.category : "all",
+    language:
+      typeof req.query.language === "string" ? req.query.language : "all",
     sort: typeof req.query.sort === "string" ? req.query.sort : "members",
     limit: Number(req.query.limit) || 20,
     offset: Number(req.query.offset) || 0,

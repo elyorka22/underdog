@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/lib/api";
+import { LANGUAGES } from "@/lib/languages";
 
 type SearchFiltersProps = {
   categories: Category[];
@@ -17,6 +18,7 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
       q: searchParams.get("q") || "",
       type: searchParams.get("type") || "all",
       category: searchParams.get("category") || "all",
+      language: searchParams.get("language") || "all",
       sort: searchParams.get("sort") || "members",
     }),
     [searchParams],
@@ -25,22 +27,26 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
   const [q, setQ] = useState(initial.q);
   const [type, setType] = useState(initial.type);
   const [category, setCategory] = useState(initial.category);
+  const [language, setLanguage] = useState(initial.language);
   const [sort, setSort] = useState(initial.sort);
 
   function push(next: {
     q?: string;
     type?: string;
     category?: string;
+    language?: string;
     sort?: string;
   }) {
     const params = new URLSearchParams();
     const nextQ = next.q ?? q;
     const nextType = next.type ?? type;
     const nextCategory = next.category ?? category;
+    const nextLanguage = next.language ?? language;
     const nextSort = next.sort ?? sort;
     if (nextQ.trim()) params.set("q", nextQ.trim());
     if (nextType !== "all") params.set("type", nextType);
     if (nextCategory !== "all") params.set("category", nextCategory);
+    if (nextLanguage !== "all") params.set("language", nextLanguage);
     if (nextSort !== "members") params.set("sort", nextSort);
     router.push(`/search?${params.toString()}`);
   }
@@ -68,6 +74,32 @@ export function SearchFilters({ categories }: SearchFiltersProps) {
               setType(item.id);
               setCategory("all");
               push({ type: item.id, category: "all" });
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="ud-type-pills" role="group" aria-label="Til">
+        <button
+          type="button"
+          className={`press ud-tab ${language === "all" ? "is-active" : ""}`}
+          onClick={() => {
+            setLanguage("all");
+            push({ language: "all" });
+          }}
+        >
+          Barcha tillar
+        </button>
+        {LANGUAGES.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`press ud-tab ${language === item.id ? "is-active" : ""}`}
+            onClick={() => {
+              setLanguage(item.id);
+              push({ language: item.id });
             }}
           >
             {item.label}

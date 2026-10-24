@@ -1,3 +1,4 @@
+import { detectLanguage } from "@underdog/shared";
 import {
   claimCandidates,
   closePool,
@@ -7,6 +8,7 @@ import {
   finishCandidate,
   finishHelperRun,
   getCandidateStats,
+  getDiscoveryQuery,
   getSettings,
   hasDatabase,
   isHelperPaused,
@@ -132,6 +134,17 @@ async function processBatch(settings, force = {}) {
         failed += 1;
         await finishCandidate(candidate.id, "skipped", resolved.reason);
       } else {
+        let language = null;
+        if (candidate.query_id) {
+          const dq = await getDiscoveryQuery(Number(candidate.query_id));
+          language = dq?.language || null;
+        }
+        if (!language) {
+          language = detectLanguage(
+            `${resolved.title || ""} ${resolved.description || ""}`,
+          );
+        }
+
         await upsertCommunity({
           username: resolved.username,
           title: resolved.title,
@@ -141,6 +154,7 @@ async function processBatch(settings, force = {}) {
             resolved.description,
             candidate.category_hint,
           ),
+          language,
           membersCount: resolved.membersCount,
           tags: [],
           verified: resolved.verified,
