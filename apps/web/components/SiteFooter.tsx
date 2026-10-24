@@ -14,7 +14,7 @@ export function SiteFooter() {
         <div className="ud-footer__links">
           <Link href="/categories">Kategoriyalar</Link>
           <Link href="/search">Qidiruv</Link>
-          <Link href="/favorites">Sevimlilar</Link>
+          <Link href="/favorites">Saqlanganlar</Link>
           <Link href="/#qanday">Qanday ishlaydi</Link>
           <Link href="/about">Haqida</Link>
         </div>

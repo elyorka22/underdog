@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Sevimlilar",
+  title: "Saqlanganlar",
 };
 
 export default function FavoritesLayout({

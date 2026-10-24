@@ -97,6 +97,67 @@ app.get("/api/popular", async (req, res) => {
   res.json(await listPopular(Number(req.query.limit) || 8));
 });
 
+const suggestHits = new Map();
+
+function suggestAllowed(ip) {
+  const key = String(ip || "unknown");
+  const now = Date.now();
+  const windowMs = 60_000;
+  const max = 8;
+  const entry = suggestHits.get(key) || { count: 0, start: now };
+  if (now - entry.start > windowMs) {
+    entry.count = 0;
+    entry.start = now;
+  }
+  entry.count += 1;
+  suggestHits.set(key, entry);
+  return entry.count <= max;
+}
+
+app.post("/api/suggest", async (req, res) => {
+  if (!suggestAllowed(req.ip)) {
+    res.status(429).json({ error: "Too many requests" });
+    return;
+  }
+
+  const raw =
+    typeof req.body?.username === "string" ? req.body.username.trim() : "";
+  const cleaned = raw
+    .replace(/^@+/, "")
+    .replace(/^https?:\/\/t\.me\//i, "")
+    .trim();
+  if (!cleaned || cleaned.length < 3 || cleaned.length > 64) {
+    res.status(400).json({ error: "Valid username required" });
+    return;
+  }
+
+  const type =
+    typeof req.body?.type === "string" &&
+    ["channel", "group", "bot"].includes(req.body.type)
+      ? req.body.type
+      : undefined;
+  const categoryHint =
+    typeof req.body?.categoryId === "string" && req.body.categoryId
+      ? req.body.categoryId
+      : undefined;
+
+  let added = 0;
+  if (hasDatabase()) {
+    added = await enqueueMany([cleaned], {
+      source: "volunteer",
+      categoryHint,
+    });
+  }
+
+  res.json({
+    ok: true,
+    added,
+    username: cleaned,
+    type: type || null,
+    queued: hasDatabase(),
+  });
+});
+
 app.get("/api/communities/:id", async (req, res) => {
   const item = await getCommunity(req.params.id);
   if (!item) {

@@ -9,16 +9,23 @@ export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
   const isHome = pathname === "/";
+  const isSaved = pathname === "/favorites";
+  const bare = isHome || isSaved;
 
   if (isAdmin) {
     return <>{children}</>;
   }
 
   return (
-    <div id="top" className={isHome ? "ud-chrome--home" : undefined}>
-      {isHome ? null : <SiteHeader />}
+    <div
+      id="top"
+      className={
+        isHome ? "ud-chrome--home" : isSaved ? "ud-chrome--saved" : undefined
+      }
+    >
+      {bare ? null : <SiteHeader />}
       <main>{children}</main>
-      {isHome ? null : <SiteFooter />}
+      {bare ? null : <SiteFooter />}
     </div>
   );
 }

@@ -43,6 +43,10 @@ export type Stats = {
   categories: number;
 };
 
+export function getApiBase() {
+  return API_URL;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
